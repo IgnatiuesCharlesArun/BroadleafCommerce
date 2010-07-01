@@ -77,31 +77,9 @@
 				<arg line="--batch-mode @{options} @{goal}" />
 			</java>
 		</sequential>
-	</macrodef>
-	
-	<target name="start-db">  
-        <echo message="Starting Data Base..." />  
-        <java fork="true"  spawn="true" classname="org.hsqldb.Server" classpathref="build.runtime.classpath">  
-            <arg  line="-database.0 file:data/broadleaf -dbname.0 broadleaf"/>  
-        </java>  
-    </target>
-	
-	<target name="stop-db">  
-        <echo message="Execute SQL on new Data Base..." />  
-        <sql  
-            autocommit="true"  
-            print="true"  
-            classpathref="build.runtime.classpath"  
-            driver="org.hsqldb.jdbcDriver"  
-            url="jdbc:hsqldb:hsql://localhost/broadleaf;ifexists=true"  
-            userid="sa"  
-            password="">
-            <transaction>SHUTDOWN</transaction>  
-        </sql>  
-        <echo message="SQL Executed on data base..." />  
-    </target> 
+	</macrodef> 
 
-	<target name="launch-admin" depends="start-db">
+	<target name="launch-admin">
 		<delete>
 			<fileset dir="${maven.build.dir}/WEB-INF/lib" includes="*.*"/>
 	  	</delete>
@@ -109,7 +87,7 @@
 		<maven-launch basedir="${basedir}" goal="clean compile war:inplace jetty:run" resultproperty="maven.build.result" />
 	</target>
 
-	<target name="stop-admin" depends="stop-db">
+	<target name="stop-admin">
 		<minimal-maven-launch basedir="${basedir}" goal="jetty:stop" resultproperty="maven.build.result" />
 	</target>
 	

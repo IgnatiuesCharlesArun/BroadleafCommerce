@@ -56,11 +56,6 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>commons-dbcp</groupId>
 			<artifactId>commons-dbcp</artifactId>
 		</dependency>
@@ -84,11 +79,12 @@
 			<groupId>javax.annotation</groupId>
 			<artifactId>jsr250-api</artifactId>
 		</dependency>
+		<!-- installed the sqljdbc4.jar in the local repository using an arbitrary groupid and artifactid -->
 		<dependency>
 			<groupId>sqljdbc</groupId>
 			<artifactId>sqljdbc</artifactId>
 			<version>4</version>
-			<scope>compile</scope>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 </project>

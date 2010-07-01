@@ -8,7 +8,8 @@
 		<non-jta-data-source>jdbc/web</non-jta-data-source>
 		<exclude-unlisted-classes/>
 		<properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
+            <property name="hibernate.connection.isolation" value="4096"/>
         </properties>
 	</persistence-unit>
 	
@@ -16,7 +17,8 @@
 		<non-jta-data-source>jdbc/webSecure</non-jta-data-source>
 		<exclude-unlisted-classes/>
 		<properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
+            <property name="hibernate.connection.isolation" value="4096"/>
         </properties>
 	</persistence-unit>
 	

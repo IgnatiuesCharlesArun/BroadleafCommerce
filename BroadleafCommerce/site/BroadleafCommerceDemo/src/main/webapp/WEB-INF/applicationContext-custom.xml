@@ -31,16 +31,16 @@
 	
 	<bean id="blDS" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
-		<property name="url" value="jdbc:sqlserver://172.16.238.135:1433;databaseName=broadleaf" />
-		<property name="username" value="sa" />
-		<property name="password" value="not9sank" />
+		<property name="url" value="jdbc:sqlserver://[sql server host]:1433;databaseName=broadleaf" />
+		<property name="username" value="[user]" />
+		<property name="password" value="[password]" />
 	</bean>
 	
 	<bean id="blDS-secure" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
-		<property name="url" value="jdbc:sqlserver://172.16.238.135:1433;databaseName=broadleaf-secure" />
-		<property name="username" value="sa" />
-		<property name="password" value="not9sank" />
+		<property name="url" value="jdbc:sqlserver://[sql server host]:1433;databaseName=broadleaf-secure" />
+		<property name="username" value="[user]" />
+		<property name="password" value="[password]" />
 	</bean>
 	
 	<bean id="blCacheManager"
