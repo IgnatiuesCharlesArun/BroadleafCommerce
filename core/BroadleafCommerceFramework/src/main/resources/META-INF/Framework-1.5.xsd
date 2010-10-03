@@ -1,0 +1,87 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:include schemaLocation="Profile-1.5.xsd"/>
+	<xsd:complexType name="fulfillment-group-impl">
+		<xsd:sequence>
+			<xsd:element name="county-tax" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="shipping-price" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="method" type="xsd:string" />
+			<xsd:element name="type">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="type" type="xsd:string" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="district-tax" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="state-tax" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="retail-shipping-price" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="sale-shipping-price" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="city-tax" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="id" type="xsd:integer" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="country-tax" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="merchandise-total" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="total-tax" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="fulfillment-group-item" maxOccurs="unbounded" type="fulfillment-group-item-impl" />
+			<xsd:element name="total" minOccurs="0" maxOccurs="1" type="money"/>
+		</xsd:sequence>
+		<xsd:attribute name="primary" type="xsd:boolean" />
+	</xsd:complexType>
+	<xsd:complexType name="fulfillment-group-item-impl">
+		<xsd:sequence>
+			<xsd:element name="order-item" type="order-item-impl"/>
+			<xsd:element name="sale-price" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="price" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="retail-price" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="id" type="xsd:integer" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+		<xsd:attribute name="quantity" type="xsd:integer" />
+	</xsd:complexType>
+	<xsd:complexType name="order-item-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" />
+			<xsd:element name="sale-price" type="money"/>
+			<xsd:element name="retail-price" type="money"/>
+			<xsd:element name="order-item-type">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="type" type="xsd:string" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="price" type="money"/>
+		</xsd:sequence>
+		<xsd:attribute name="quantity" type="xsd:integer" />
+	</xsd:complexType>
+	<xsd:complexType name="discrete-order-item-impl">
+	  <xsd:complexContent>
+	    <xsd:extension base="order-item-impl">
+	    	<xsd:sequence>
+	    		<xsd:element name="sku" type="sku-impl"/>
+	    	</xsd:sequence>
+	    </xsd:extension>
+	  </xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="gift-wrap-order-item-impl">
+	  <xsd:complexContent>
+	    <xsd:extension base="discrete-order-item-impl">
+	    	<xsd:sequence>
+	    		<xsd:element name="wrapped-item" maxOccurs="unbounded" minOccurs="0" type="order-item-impl"/>
+	    	</xsd:sequence>
+	    </xsd:extension>
+	  </xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="sku-impl">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" />
+			<xsd:element name="sale-price" type="money"/>
+			<xsd:element name="id" type="xsd:integer" />
+			<xsd:element name="list-price" type="money"/>
+			<xsd:element name="active-start-date" type="xsd:string" />
+			<xsd:element name="active-end-date" type="xsd:string" />
+			<xsd:element name="taxable" type="xsd:boolean" />
+			<xsd:element name="discountable" type="xsd:boolean" />
+			<xsd:element name="retail-price" type="money"/>
+			<xsd:element name="description" minOccurs="0" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

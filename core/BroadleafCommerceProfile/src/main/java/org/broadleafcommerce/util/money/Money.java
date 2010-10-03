@@ -24,14 +24,13 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
 
-@SuppressWarnings("unchecked")
-public final class Money implements Serializable, Cloneable, Comparable, Externalizable {
+public final class Money implements Serializable, Cloneable, Comparable<Money>, Externalizable {
 
     private static final long serialVersionUID = 1L;
 
     private BigDecimal amount;
 
-    private final Currency currency;
+    private Currency currency;
 
     public Money() {
         this(BankersRounding.zeroAmount(), defaultCurrency());
@@ -107,6 +106,14 @@ public final class Money implements Serializable, Cloneable, Comparable, Externa
 
     public Currency getCurrency() {
         return currency;
+    }
+    
+    public String getCurrencyCode() {
+    	return currency.getCurrencyCode();
+    }
+    
+    public void setCurrencyCode(String currencyCode) {
+    	this.currency = Currency.getInstance(currencyCode);
     }
 
     public Money add(Money other) {
@@ -205,11 +212,6 @@ public final class Money implements Serializable, Cloneable, Comparable, Externa
 
     public int compareTo(BigDecimal value) {
         return amount.compareTo(value);
-    }
-
-    public int compareTo(Object other) {
-        Money otherMoney = (Money) other;
-        return compareTo(otherMoney);
     }
 
     public boolean equals(Object o) {

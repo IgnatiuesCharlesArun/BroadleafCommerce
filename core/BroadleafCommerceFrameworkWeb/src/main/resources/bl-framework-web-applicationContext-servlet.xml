@@ -43,7 +43,14 @@
 		<property name="order" value="1" />
 	</bean>
 
-	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver"/> 
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="mediaTypes">
+			<map>
+				<entry key="json" value="application/json" />
+				<entry key="xml" value="application/xml" />
+			</map>
+		</property>
+	</bean> 
 	
 	<bean class="org.broadleafcommerce.web.WrappingViewResolver">
       <constructor-arg>

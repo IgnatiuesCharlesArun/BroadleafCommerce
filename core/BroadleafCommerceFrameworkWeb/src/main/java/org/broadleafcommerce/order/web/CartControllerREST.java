@@ -33,10 +33,12 @@ import org.springframework.web.bind.annotation.SessionAttributes;
 
 @Controller("blCartControllerREST")
 @SessionAttributes("cartSummary")
+@RequestMapping("/service/basket")
 public class CartControllerREST extends CartController {
 
     @RequestMapping(value = "currentCart", method = RequestMethod.GET)
-    public String viewCart(ModelMap model, HttpServletRequest request) throws PricingException {
+    public String currentCart(ModelMap model, HttpServletRequest request) throws PricingException {
+    	model.addAttribute("_modelKey", "cartSummary");
     	return super.viewCart(model, request);
     }
 

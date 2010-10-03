@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Mapping DTD Version 1.0//EN" "http://castor.org/mapping.dtd">
+<mapping>
+	<class name="org.broadleafcommerce.util.money.Money"
+		auto-complete="false">
+		<map-to xml="money" />
+		<field name="amount" type="java.math.BigDecimal" required="false"
+			direct="false" transient="false">
+			<bind-xml name="amount" node="attribute"
+				reference="false" />
+		</field>
+		<field name="currencyCode" type="string" required="false"
+			direct="false" transient="false">
+			<bind-xml name="currency-code" node="attribute"
+				reference="false" />
+		</field>
+	</class>
+</mapping>

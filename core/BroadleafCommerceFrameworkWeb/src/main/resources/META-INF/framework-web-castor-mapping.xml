@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Mapping DTD Version 1.0//EN" "http://castor.org/mapping.dtd">
+<mapping>
+    <class name="org.broadleafcommerce.order.web.model.CartSummary" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.web.model.CartSummary</description>
+        <map-to xml="cart-summary"/>
+        <field name="rows" type="java.util.List" required="false"
+            direct="false" transient="false" collection="collection">
+            <bind-xml name="cart-order-item" node="element" reference="false"/>
+        </field>
+        <field name="fulfillmentGroup"
+            type="org.broadleafcommerce.order.domain.FulfillmentGroup"
+            required="false" direct="false" transient="false">
+            <bind-xml name="fulfillment-group" node="element" reference="false"/>
+        </field>
+        <field name="promoCode" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="promo-code" node="element" reference="false"/>
+        </field>
+        <field name="orderDiscounts" type="java.math.BigDecimal"
+            required="false" direct="false" transient="false">
+            <bind-xml name="order-discounts" node="element" reference="false"/>
+        </field>
+    </class>
+    <class name="org.broadleafcommerce.order.web.model.CartOrderItem" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.web.model.CartOrderItem</description>
+        <map-to xml="cart-order-item"/>
+        <field name="addressId" type="long" required="false"
+            direct="false" transient="false">
+            <bind-xml name="address-id" node="attribute" reference="false"/>
+        </field>
+        <field name="quantity" type="integer" required="false"
+            direct="false" transient="false">
+            <bind-xml name="quantity" node="attribute" reference="false"/>
+        </field>
+        <field name="orderItem"
+            type="org.broadleafcommerce.order.domain.OrderItem"
+            required="false" direct="false" transient="false">
+            <bind-xml name="order-item" node="element" reference="false"/>
+        </field>
+    </class>
+</mapping>

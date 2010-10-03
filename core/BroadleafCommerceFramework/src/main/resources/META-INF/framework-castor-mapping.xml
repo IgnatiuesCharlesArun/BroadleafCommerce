@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Mapping DTD Version 1.0//EN" "http://castor.org/mapping.dtd">
+<mapping>
+	<include href="profile-castor-mapping.xml" />
+    <class name="org.broadleafcommerce.order.domain.OrderImpl" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.domain.OrderImpl</description>
+        <map-to xml="order-impl"/>
+        <field name="markedForOffer" type="boolean" required="false"
+            direct="false" transient="false">
+            <bind-xml name="marked-for-offer" node="attribute" reference="false"/>
+        </field>
+        <field name="totalShipping"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="total-shipping" node="element" reference="false"/>
+        </field>
+        <field name="candidateOrderOffers" type="java.util.List"
+            required="false" direct="false" transient="false" collection="collection">
+            <bind-xml name="candidate-order-offers" node="element" reference="false"/>
+        </field>
+        <field name="emailAddress" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="email-address" node="element" reference="false"/>
+        </field>
+        <field name="countyTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="county-tax" node="element" reference="false"/>
+        </field>
+        <field name="paymentInfos" type="java.util.List"
+            required="false" direct="false" transient="false" collection="collection">
+            <bind-xml name="payment-info" node="element" reference="false"/>
+        </field>
+        <field name="subTotal"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="sub-total" node="element" reference="false"/>
+        </field>
+        <field name="name" type="string" required="false" direct="false" transient="false">
+            <bind-xml name="name" node="element" reference="false"/>
+        </field>
+        <field name="auditable"
+            type="org.broadleafcommerce.common.domain.Auditable"
+            required="false" direct="false" transient="false">
+            <bind-xml name="auditable" node="element" reference="false"/>
+        </field>
+        <field name="totalTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="total-tax" node="element" reference="false"/>
+        </field>
+        <field name="orderNumber" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="order-number" node="element" reference="false"/>
+        </field>
+        <field name="stateTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="state-tax" node="element" reference="false"/>
+        </field>
+        <field name="customer"
+            type="org.broadleafcommerce.profile.domain.Customer"
+            required="false" direct="false" transient="false">
+            <bind-xml name="customer" node="element" reference="false"/>
+        </field>
+        <field name="fulfillmentGroups" type="java.util.List"
+            required="false" direct="false" transient="false" collection="collection">
+            <bind-xml name="fulfillment-group" node="element" reference="false"/>
+        </field>
+        <field name="total"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="total" node="element" reference="false"/>
+        </field>
+        <field name="status"
+            type="org.broadleafcommerce.order.service.type.OrderStatus"
+            required="false" direct="false" transient="false">
+            <bind-xml name="status" node="element" reference="false"/>
+        </field>
+        <field name="id" type="long" required="false" direct="false" transient="false">
+            <bind-xml name="id" node="element" reference="false"/>
+        </field>
+        <field name="orderItems" type="java.util.List" required="false"
+            direct="false" transient="false" collection="collection">
+            <bind-xml name="order-item" node="element" reference="false"/>
+        </field>
+        <field name="cityTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="city-tax" node="element" reference="false"/>
+        </field>
+        <field name="adjustmentPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="adjustment-price" node="element" reference="false"/>
+        </field>
+        <field name="additionalOfferInformation" type="java.util.Map"
+            required="false" direct="false" transient="false">
+            <bind-xml name="additional-offer-information" node="element" reference="false"/>
+        </field>
+        <field name="submitDate" type="date" required="false"
+            direct="false" transient="false">
+            <bind-xml name="submit-date" node="element" reference="false"/>
+        </field>
+        <field name="districtTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="district-tax" node="element" reference="false"/>
+        </field>
+        <field name="countryTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="country-tax" node="element" reference="false"/>
+        </field>
+    </class>
+    <class
+        name="org.broadleafcommerce.order.domain.FulfillmentGroupImpl" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.domain.FulfillmentGroupImpl</description>
+        <map-to xml="fulfillment-group-impl"/>
+        <field name="primary" type="boolean" required="false"
+            direct="false" transient="false">
+            <bind-xml name="primary" node="attribute" reference="false"/>
+        </field>
+        <field name="countyTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="county-tax" node="element" reference="false"/>
+        </field>
+        <field name="shippingPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="shipping-price" node="element" reference="false"/>
+        </field>
+        <field name="personalMessage"
+            type="org.broadleafcommerce.order.domain.PersonalMessage"
+            required="false" direct="false" transient="false">
+            <bind-xml name="personal-message" node="element" reference="false"/>
+        </field>
+        <field name="method" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="method" node="element" reference="false"/>
+        </field>
+        <field name="type"
+            type="org.broadleafcommerce.order.service.type.FulfillmentGroupType"
+            required="false" direct="false" transient="false">
+            <bind-xml name="type" node="element" reference="false"/>
+        </field>
+        <field name="deliveryInstruction" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="delivery-instruction" node="element" reference="false"/>
+        </field>
+        <field name="address"
+            type="org.broadleafcommerce.profile.domain.Address"
+            required="false" direct="false" transient="false">
+            <bind-xml name="address" node="element" reference="false"/>
+        </field>
+        <field name="fulfillmentGroupFees" type="java.util.List"
+            required="false" direct="false" transient="false" collection="collection">
+            <bind-xml name="fulfillment-group-fee" node="element" reference="false"/>
+        </field>
+        <field name="districtTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="district-tax" node="element" reference="false"/>
+        </field>
+        <field name="phone"
+            type="org.broadleafcommerce.profile.domain.Phone"
+            required="false" direct="false" transient="false">
+            <bind-xml name="phone" node="element" reference="false"/>
+        </field>
+        <field name="referenceNumber" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="reference-number" node="element" reference="false"/>
+        </field>
+        <field name="stateTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="state-tax" node="element" reference="false"/>
+        </field>
+        <field name="retailShippingPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="retail-shipping-price" node="element" reference="false"/>
+        </field>
+        <field name="saleShippingPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="sale-shipping-price" node="element" reference="false"/>
+        </field>
+        <field name="cityTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="city-tax" node="element" reference="false"/>
+        </field>
+        <field name="id" type="long" required="false" direct="false" transient="false">
+            <bind-xml name="id" node="element" reference="false"/>
+        </field>
+        <field name="adjustmentPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="adjustment-price" node="element" reference="false"/>
+        </field>
+        <field name="status"
+            type="org.broadleafcommerce.order.service.type.FulfillmentGroupStatusType"
+            required="false" direct="false" transient="false">
+            <bind-xml name="status" node="element" reference="false"/>
+        </field>
+        <field name="order"
+            type="org.broadleafcommerce.order.domain.Order"
+            required="false" direct="false" transient="true">
+            <bind-xml name="order" node="element" reference="false"/>
+        </field>
+        <field name="countryTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="country-tax" node="element" reference="false"/>
+        </field>
+        <field name="merchandiseTotal"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="merchandise-total" node="element" reference="false"/>
+        </field>
+        <field name="totalTax"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="total-tax" node="element" reference="false"/>
+        </field>
+        <field name="fulfillmentGroupItems" type="java.util.List"
+            required="false" direct="false" transient="false" collection="collection">
+            <bind-xml name="fulfillment-group-item" node="element" reference="false"/>
+        </field>
+        <field name="fulfillmentGroupAdjustments" type="java.util.List"
+            required="false" direct="false" transient="false" collection="collection">
+            <bind-xml name="fulfillment-group-adjustment"
+                node="element" reference="false"/>
+        </field>
+        <field name="total"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="total" node="element" reference="false"/>
+        </field>
+        <field name="service" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="service" node="element" reference="false"/>
+        </field>
+    </class>
+    <class
+        name="org.broadleafcommerce.order.domain.FulfillmentGroupItemImpl" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.domain.FulfillmentGroupItemImpl</description>
+        <map-to xml="fulfillment-group-item-impl"/>
+        <field name="quantity" type="integer" required="false"
+            direct="false" transient="false">
+            <bind-xml name="quantity" node="attribute" reference="false"/>
+        </field>
+        <field name="status" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="status" node="element" reference="false"/>
+        </field>
+        <field name="orderItem"
+            type="org.broadleafcommerce.order.domain.OrderItem"
+            required="false" direct="false" transient="false">
+            <bind-xml name="order-item" node="element" reference="false"/>
+        </field>
+        <field name="salePrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="sale-price" node="element" reference="false"/>
+        </field>
+        <field name="price"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="price" node="element" reference="false"/>
+        </field>
+        <field name="fulfillmentGroup"
+            type="org.broadleafcommerce.order.domain.FulfillmentGroup"
+            required="false" direct="false" transient="true">
+            <bind-xml name="fulfillment-group" node="element" reference="false"/>
+        </field>
+        <field name="retailPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="retail-price" node="element" reference="false"/>
+        </field>
+        <field name="id" type="long" required="false" direct="false" transient="false">
+            <bind-xml name="id" node="element" reference="false"/>
+        </field>
+    </class>
+    <class name="org.broadleafcommerce.catalog.domain.SkuImpl" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.catalog.domain.SkuImpl</description>
+        <map-to xml="sku-impl"/>
+        <field name="name" type="string" required="false" direct="false" transient="false">
+            <bind-xml name="name" node="element" reference="false"/>
+        </field>
+        <field name="salePrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="sale-price" node="element" reference="false"/>
+        </field>
+        <field name="id" type="long" required="false" direct="false" transient="false">
+            <bind-xml name="id" node="element" reference="false"/>
+        </field>
+        <field name="listPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="list-price" node="element" reference="false"/>
+        </field>
+        <field name="activeStartDate" type="date" required="false"
+            direct="false" transient="false">
+            <bind-xml name="active-start-date" node="element" reference="false"/>
+        </field>
+        <field name="available" type="boolean" required="false"
+            direct="false" transient="false">
+            <bind-xml name="available" node="element" reference="false"/>
+        </field>
+        <field name="activeEndDate" type="date" required="false"
+            direct="false" transient="false">
+            <bind-xml name="active-end-date" node="element" reference="false"/>
+        </field>
+        <field name="skuMedia" type="java.util.Map" required="false"
+            direct="false" transient="false">
+            <bind-xml name="sku-media" node="element" reference="false"/>
+        </field>
+        <field name="taxable" type="boolean" required="false"
+            direct="false" transient="false">
+            <bind-xml name="taxable" node="element" reference="false"/>
+        </field>
+        <field name="discountable" type="boolean" required="false"
+            direct="false" transient="false">
+            <bind-xml name="discountable" node="element" reference="false"/>
+        </field>
+        <field name="longDescription" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="long-description" node="element" reference="false"/>
+        </field>
+        <field name="allParentProducts" type="java.util.List"
+            required="false" direct="false" transient="true" collection="collection">
+            <bind-xml name="all-parent-product" node="element" reference="false"/>
+        </field>
+        <field name="skuImages" type="java.util.Map" required="false"
+            direct="false" transient="false" collection="map">
+            <bind-xml name="sku-image" node="element" reference="false"/>
+        </field>
+        <field name="retailPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="retail-price" node="element" reference="false"/>
+        </field>
+        <field name="description" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="description" node="element" reference="false"/>
+        </field>
+    </class>
+    <class name="org.broadleafcommerce.order.domain.OrderItemImpl" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.domain.OrderItemImpl</description>
+        <map-to xml="order-item"/>
+        <field name="quantity" type="integer" required="false"
+            direct="false" transient="false">
+            <bind-xml name="quantity" node="attribute" reference="false"/>
+        </field>
+        <field name="giftWrapOrderItem"
+            type="org.broadleafcommerce.order.domain.GiftWrapOrderItem"
+            required="false" direct="false" transient="false">
+            <bind-xml name="gift-wrap-order-item" node="element" reference="false"/>
+        </field>
+        <field name="personalMessage"
+            type="org.broadleafcommerce.order.domain.PersonalMessage"
+            required="false" direct="false" transient="false">
+            <bind-xml name="personal-message" node="element" reference="false"/>
+        </field>
+        <field name="salePrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="sale-price" node="element" reference="false"/>
+        </field>
+        <field name="retailPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="retail-price" node="element" reference="false"/>
+        </field>
+        <field name="id" type="long" required="false" direct="false" transient="false">
+            <bind-xml name="id" node="element" reference="false"/>
+        </field>
+        <field name="orderItemType"
+            type="org.broadleafcommerce.order.service.type.OrderItemType"
+            required="false" direct="false" transient="false">
+            <bind-xml name="order-item-type" node="element" reference="false"/>
+        </field>
+        <field name="adjustmentPrice"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="adjustment-price" node="element" reference="false"/>
+        </field>
+        <field name="category"
+            type="org.broadleafcommerce.catalog.domain.Category"
+            required="false" direct="false" transient="false">
+            <bind-xml name="category" node="element" reference="false"/>
+        </field>
+        <field name="price"
+            type="org.broadleafcommerce.util.money.Money"
+            required="false" direct="false" transient="false">
+            <bind-xml name="price" node="element" reference="false"/>
+        </field>
+        <field name="order"
+            type="org.broadleafcommerce.order.domain.Order"
+            required="false" direct="false" transient="true">
+            <bind-xml name="order" node="element" reference="false"/>
+        </field>
+        <field name="candidateItemOffers" type="java.util.List"
+            required="false" direct="false" transient="false" collection="collection">
+            <bind-xml name="candidate-item-offers" node="element" reference="false"/>
+        </field>
+    </class>
+    <class
+        name="org.broadleafcommerce.order.domain.DiscreteOrderItemImpl"
+        extends="org.broadleafcommerce.order.domain.OrderItemImpl" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.domain.DiscreteOrderItemImpl</description>
+        <map-to xml="discrete-order-item-impl"/>
+        <field name="product"
+            type="org.broadleafcommerce.catalog.domain.Product"
+            required="false" direct="false" transient="false">
+            <bind-xml name="product" node="element" reference="false"/>
+        </field>
+        <field name="bundleOrderItem"
+            type="org.broadleafcommerce.order.domain.BundleOrderItem"
+            required="false" direct="false" transient="false">
+            <bind-xml name="bundle-order-item" node="element" reference="false"/>
+        </field>
+        <field name="sku"
+            type="org.broadleafcommerce.catalog.domain.Sku"
+            required="false" direct="false" transient="false">
+            <bind-xml name="sku" node="element" reference="false"/>
+        </field>
+    </class>
+    <class
+        name="org.broadleafcommerce.order.domain.GiftWrapOrderItemImpl"
+        extends="org.broadleafcommerce.order.domain.DiscreteOrderItemImpl" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.domain.GiftWrapOrderItemImpl</description>
+        <map-to xml="gift-wrap-order-item-impl"/>
+        <field name="wrappedItems" type="java.util.List"
+            required="false" direct="false" transient="false" collection="collection">
+            <bind-xml name="wrapped-item" node="element" reference="false"/>
+        </field>
+    </class>
+    <class
+        name="org.broadleafcommerce.order.domain.BundleOrderItemImpl"
+        extends="org.broadleafcommerce.order.domain.OrderItemImpl" auto-complete="false">
+        <description>Default mapping for class org.broadleafcommerce.order.domain.BundleOrderItemImpl</description>
+        <map-to xml="bundle-order-item-impl"/>
+        <field name="name" type="string" required="false"
+            direct="false" transient="false">
+            <bind-xml name="name" node="element" reference="false"/>
+        </field>
+    </class>
+</mapping>
