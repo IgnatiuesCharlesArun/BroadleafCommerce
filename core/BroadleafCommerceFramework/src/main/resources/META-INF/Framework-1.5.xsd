@@ -1,54 +1,86 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<xsd:include schemaLocation="Profile-1.5.xsd"/>
+	<xsd:complexType name="order-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="customer" type="customer-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="status" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="city-tax" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="county-tax" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="state-tax" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="district-tax" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="country-tax" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="total-tax" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="total-shipping" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="sub-total" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="total" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="submit-date" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="order-number" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="email-address" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="adjustment-price" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="order-item" type="order-item-impl" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="fulfillment-group" type="fulfillment-group-impl" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="order-adjustment" type="order-adjustment-impl" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="offer-code" type="offer-code-impl" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="payment-info" type="payment-info-impl" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="additional-offer-information" type="additional-offer-information" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
 	<xsd:complexType name="fulfillment-group-impl">
 		<xsd:sequence>
-			<xsd:element name="county-tax" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="shipping-price" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="method" type="xsd:string" />
-			<xsd:element name="type">
-				<xsd:complexType>
-					<xsd:sequence>
-						<xsd:element name="type" type="xsd:string" />
-					</xsd:sequence>
-				</xsd:complexType>
-			</xsd:element>
-			<xsd:element name="district-tax" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="state-tax" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="retail-shipping-price" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="sale-shipping-price" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="city-tax" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="id" type="xsd:integer" minOccurs="0" maxOccurs="1" />
-			<xsd:element name="country-tax" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="merchandise-total" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="total-tax" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="fulfillment-group-item" maxOccurs="unbounded" type="fulfillment-group-item-impl" />
-			<xsd:element name="total" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="county-tax" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="shipping-price" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="personal-message" type="personal-message-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="method" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="type" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="delivery-instruction" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="address" type="address-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="fulfillment-group-fee" type="fulfillment-group-fee-impl" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="district-tax" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="phone" type="phone-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="reference-number" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="state-tax" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="retail-shipping-price" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="sale-shipping-price" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="city-tax" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="country-tax" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="merchandise-total" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="total-tax" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="fulfillment-group-item" nillable="true" minOccurs="0" maxOccurs="unbounded" type="fulfillment-group-item-impl" />
+			<xsd:element name="total" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
 		</xsd:sequence>
 		<xsd:attribute name="primary" type="xsd:boolean" />
 	</xsd:complexType>
 	<xsd:complexType name="fulfillment-group-item-impl">
 		<xsd:sequence>
 			<xsd:element name="order-item" type="order-item-impl"/>
-			<xsd:element name="sale-price" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="price" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="retail-price" minOccurs="0" maxOccurs="1" type="money"/>
-			<xsd:element name="id" type="xsd:integer" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="sale-price" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="price" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="retail-price" nillable="true" minOccurs="0" maxOccurs="1" type="money"/>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 		<xsd:attribute name="quantity" type="xsd:integer" />
 	</xsd:complexType>
 	<xsd:complexType name="order-item-impl">
 		<xsd:sequence>
-			<xsd:element name="id" type="xsd:integer" />
-			<xsd:element name="sale-price" type="money"/>
-			<xsd:element name="retail-price" type="money"/>
-			<xsd:element name="order-item-type">
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="category" type="category-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="retail-price" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="sale-price" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="price" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="adjustment-price" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="personal-message" type="personal-message-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="gift-wrap-order-item" type="gift-wrap-order-item-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="order-item-adjustment" type="order-item-adjustment-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="order-item-type" nillable="true" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
 					<xsd:sequence>
 						<xsd:element name="type" type="xsd:string" />
 					</xsd:sequence>
 				</xsd:complexType>
 			</xsd:element>
-			<xsd:element name="price" type="money"/>
 		</xsd:sequence>
 		<xsd:attribute name="quantity" type="xsd:integer" />
 	</xsd:complexType>
@@ -56,7 +88,7 @@
 	  <xsd:complexContent>
 	    <xsd:extension base="order-item-impl">
 	    	<xsd:sequence>
-	    		<xsd:element name="sku" type="sku-impl"/>
+	    		<xsd:element name="sku" type="sku-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
 	    	</xsd:sequence>
 	    </xsd:extension>
 	  </xsd:complexContent>
@@ -65,23 +97,200 @@
 	  <xsd:complexContent>
 	    <xsd:extension base="discrete-order-item-impl">
 	    	<xsd:sequence>
-	    		<xsd:element name="wrapped-item" maxOccurs="unbounded" minOccurs="0" type="order-item-impl"/>
+	    		<xsd:element name="wrapped-item" nillable="true" maxOccurs="unbounded" minOccurs="0" type="order-item-impl"/>
 	    	</xsd:sequence>
 	    </xsd:extension>
 	  </xsd:complexContent>
 	</xsd:complexType>
 	<xsd:complexType name="sku-impl">
 		<xsd:sequence>
-			<xsd:element name="name" type="xsd:string" />
-			<xsd:element name="sale-price" type="money"/>
-			<xsd:element name="id" type="xsd:integer" />
-			<xsd:element name="list-price" type="money"/>
-			<xsd:element name="active-start-date" type="xsd:string" />
-			<xsd:element name="active-end-date" type="xsd:string" />
-			<xsd:element name="taxable" type="xsd:boolean" />
-			<xsd:element name="discountable" type="xsd:boolean" />
-			<xsd:element name="retail-price" type="money"/>
-			<xsd:element name="description" minOccurs="0" type="xsd:string" />
+			<xsd:element name="name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="sale-price" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="list-price" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="active-start-date" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="active-end-date" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="taxable" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="discountable" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="retail-price" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="description" minOccurs="0" type="xsd:string" nillable="true" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="category-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="default-parent-category" type="category-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="parent-category" type="category-impl" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="personal-message-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="message-to" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="message-from" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="occasion" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="order-item-adjustment-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="offer" type="offer-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="reason" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="value" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="offer-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="description" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="type" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="discount-type" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="value" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="priority" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="start-date" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="end-date" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="stackable" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="target-system" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="apply-to-sale-price" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="applies-to-order-rules" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="applies-to-customer-rules" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="apply-discount-to-marked-items" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="cobinable-with-other-offers" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="delivery-type" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="max-uses" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="uses" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="address-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="address-line-1" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="address-line-2" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="city" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="state" type="state-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="postal-code" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="county" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="zip-four" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="country" type="country-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="tokenized-address" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="standardized" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="company-name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="default" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="first-name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="last-name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="primary-phone" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="secondary-phone" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="business" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="verification-level" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="state-impl">
+		<xsd:sequence>
+			<xsd:element name="abbreviation" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="country" type="country-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="country-impl">
+		<xsd:sequence>
+			<xsd:element name="abbreviation" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="fulfillment-group-fee-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="amount" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="reporting-code" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="taxable" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="phone-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="phone-number" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="default" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="active" type="xsd:boolean" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="customer-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="user-name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="first-name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="last-name" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="email-address" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute name="receive-email" type="xsd:boolean"/>
+		<xsd:attribute name="registered" type="xsd:boolean"/>
+		<xsd:attribute name="cookied" type="xsd:boolean"/>
+		<xsd:attribute name="logged-in" type="xsd:boolean"/>
+		<xsd:attribute name="anonymous" type="xsd:boolean"/>
+	</xsd:complexType>
+	<xsd:complexType name="order-adjustment-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="offer" type="offer-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="reason" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="value" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="offer-code-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="offer" type="offer-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="offer-code" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="start-date" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="end-date" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="max-uses" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="uses" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="payment-info-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="address" type="address-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="phone" type="phone-impl" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="amount" type="money" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="type" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="amount-item" type="amount-item-impl" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="additional-field" type="additional-field" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="amount-item-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="short-description" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="description" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="unit-price" type="xsd:float" nillable="true" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute name="quantity" type="xsd:long"/>
+	</xsd:complexType>
+	<xsd:complexType name="additional-field">
+		<xsd:sequence>
+			<xsd:element name="key" type="xsd:string"/>
+			<xsd:element name="value" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="additional-offer-information">
+		<xsd:sequence>
+			<xsd:element name="key" type="offer-impl"/>
+			<xsd:element name="value" type="offer-info-impl"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="offer-info-impl">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:integer" nillable="true" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="field-value" type="field-value" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="field-value">
+		<xsd:sequence>
+			<xsd:element name="key" type="xsd:string"/>
+			<xsd:element name="value" type="xsd:string"/>
 		</xsd:sequence>
 	</xsd:complexType>
 </xsd:schema>

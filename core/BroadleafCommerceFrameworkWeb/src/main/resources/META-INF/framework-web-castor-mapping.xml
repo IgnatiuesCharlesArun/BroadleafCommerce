@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Mapping DTD Version 1.0//EN" "http://castor.org/mapping.dtd">
-<mapping>
+<mapping xmlns="http://castor.exolab.org/" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://castor.exolab.org/ http://castor.org/mapping.xsd">
     <class name="org.broadleafcommerce.order.web.model.CartSummary" auto-complete="false">
-        <description>Default mapping for class org.broadleafcommerce.order.web.model.CartSummary</description>
         <map-to xml="cart-summary"/>
         <field name="rows" type="java.util.List" required="false"
             direct="false" transient="false" collection="collection">
@@ -19,11 +19,10 @@
         </field>
         <field name="orderDiscounts" type="java.math.BigDecimal"
             required="false" direct="false" transient="false">
-            <bind-xml name="order-discounts" node="element" reference="false"/>
+            <bind-xml name="order-discount" node="element" reference="false"/>
         </field>
     </class>
     <class name="org.broadleafcommerce.order.web.model.CartOrderItem" auto-complete="false">
-        <description>Default mapping for class org.broadleafcommerce.order.web.model.CartOrderItem</description>
         <map-to xml="cart-order-item"/>
         <field name="addressId" type="long" required="false"
             direct="false" transient="false">

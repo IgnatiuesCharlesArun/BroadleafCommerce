@@ -33,16 +33,20 @@ public class ConfigureableCastorMarshaller extends CastorMarshaller implements C
 			if (modelKey != null) {
 				Map config = (Map) getAdditionalConfig().get(modelKey);
 				if (config != null) {
+					String noNamespaceSchemaLocation = (String) config.get("noNamespaceSchemaLocation");
+					if (noNamespaceSchemaLocation != null) {
+						marshaller.setNoNamespaceSchemaLocation(noNamespaceSchemaLocation);
+					}
 					String schemaLocation = (String) config.get("schemaLocation");
 					if (schemaLocation != null) {
-						marshaller.setNoNamespaceSchemaLocation(schemaLocation);
+						marshaller.setSchemaLocation(schemaLocation);
 					}
-					/*Map<String, String> namespaceMappings = (Map<String, String>) config.get("namespaceMappings");
+					Map<String, String> namespaceMappings = (Map<String, String>) config.get("namespaceMappings");
 					if (namespaceMappings != null) {
 						for (Map.Entry<String, String> entry : namespaceMappings.entrySet()) {
 							marshaller.setNamespaceMapping(entry.getKey(), entry.getValue());
 						}
-					}*/
+					}
 				}
 			}
 		}

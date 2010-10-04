@@ -142,6 +142,7 @@
 	       				<array>
 	       					<value>classpath:/META-INF/framework-web-castor-mapping.xml</value>
 	       					<value>classpath:/META-INF/framework-castor-mapping.xml</value>
+	       					<value>classpath:/META-INF/profile-castor-mapping.xml</value>
 	       				</array>
 	       			</property>
 	       			<property name="validating" value="true"/>
@@ -149,12 +150,7 @@
 	       				<map>
 	       					<entry key="cartSummary">
 	       						<map>
-	       							<entry key="schemaLocation" value="http://www.broadleafcommerce.org/schema/domain/CartSummary-1.0.xsd"/>
-	       							<entry key="namespaceMappings">
-	       								<map>
-	       									<entry key="xmlns" value="http://www.broadleafcommerce.org/schema/domain"/>
-	       								</map>
-	       							</entry>
+	       							<entry key="noNamespaceSchemaLocation" value="http://www.broadleafcommerce.org/schema/domain/CartSummary-1.5.xsd"/>
 	       						</map>
 	       					</entry>
 	       				</map>

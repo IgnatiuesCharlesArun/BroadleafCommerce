@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapping PUBLIC "-//EXOLAB/Castor Mapping DTD Version 1.0//EN" "http://castor.org/mapping.dtd">
-<mapping>
+<mapping xmlns="http://castor.exolab.org/" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://castor.exolab.org/ http://castor.org/mapping.xsd">
 	<class name="org.broadleafcommerce.util.money.Money"
 		auto-complete="false">
 		<map-to xml="money" />

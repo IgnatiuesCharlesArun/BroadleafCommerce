@@ -1,8 +1,6 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<xsd:complexType name="money">
-		<xsd:sequence>
-			<xsd:element name="amount" type="xsd:float" />
-			<xsd:element name="currency-code" type="xsd:string" />
-		</xsd:sequence>
+		<xsd:attribute name="amount" type="xsd:float" />
+		<xsd:attribute name="currency-code" type="xsd:string" />
 	</xsd:complexType>
 </xsd:schema>
