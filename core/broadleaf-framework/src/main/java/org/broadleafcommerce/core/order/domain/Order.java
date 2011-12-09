@@ -98,29 +98,7 @@ public interface Order extends Serializable {
 
     public void setSubmitDate(Date submitDate);
 
-    public Money getCityTax();
-
-    public void setCityTax(Money cityTax);
-
-    public Money getCountyTax();
-
-    public void setCountyTax(Money countyTax);
-
-    public Money getStateTax();
-
-    public void setStateTax(Money stateTax);
-    
-    public Money getDistrictTax();
-
-    public void setDistrictTax(Money districtTax);
-
-    public Money getCountryTax();
-
-    public void setCountryTax(Money countryTax);
-
-    public Money getTotalTax();
-
-    public void setTotalTax(Money totalTax);
+	public TaxDetail getOrderTax();
 
     public Money getTotalShipping();
 

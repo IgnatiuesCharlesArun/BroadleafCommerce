@@ -16,6 +16,9 @@
 
 package org.broadleafcommerce.core.offer.service.discount.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.broadleafcommerce.core.offer.domain.CandidateFulfillmentGroupOffer;
 import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustment;
 import org.broadleafcommerce.core.order.domain.BundleOrderItemImpl;
@@ -26,15 +29,13 @@ import org.broadleafcommerce.core.order.domain.FulfillmentGroupItem;
 import org.broadleafcommerce.core.order.domain.Order;
 import org.broadleafcommerce.core.order.domain.OrderItem;
 import org.broadleafcommerce.core.order.domain.PersonalMessage;
+import org.broadleafcommerce.core.order.domain.TaxDetail;
 import org.broadleafcommerce.core.order.service.manipulation.DiscreteOrderItemDecorator;
 import org.broadleafcommerce.core.order.service.type.FulfillmentGroupStatusType;
 import org.broadleafcommerce.core.order.service.type.FulfillmentGroupType;
 import org.broadleafcommerce.money.Money;
 import org.broadleafcommerce.profile.core.domain.Address;
 import org.broadleafcommerce.profile.core.domain.Phone;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class PromotableFulfillmentGroupImpl implements PromotableFulfillmentGroup {
 
@@ -232,53 +233,9 @@ public class PromotableFulfillmentGroupImpl implements PromotableFulfillmentGrou
 		delegate
 				.setFulfillmentGroupAdjustments(fulfillmentGroupAdjustments);
 	}
-
-	public Money getCityTax() {
-		return delegate.getCityTax();
-	}
-
-	public void setCityTax(Money cityTax) {
-		delegate.setCityTax(cityTax);
-	}
-
-	public Money getCountyTax() {
-		return delegate.getCountyTax();
-	}
-
-	public void setCountyTax(Money countyTax) {
-		delegate.setCountyTax(countyTax);
-	}
-
-	public Money getStateTax() {
-		return delegate.getStateTax();
-	}
-
-	public void setStateTax(Money stateTax) {
-		delegate.setStateTax(stateTax);
-	}
-
-	public Money getDistrictTax() {
-		return delegate.getDistrictTax();
-	}
-
-	public void setDistrictTax(Money districtTax) {
-		delegate.setDistrictTax(districtTax);
-	}
-
-	public Money getCountryTax() {
-		return delegate.getCountryTax();
-	}
-
-	public void setCountryTax(Money countryTax) {
-		delegate.setCountryTax(countryTax);
-	}
-
-	public Money getTotalTax() {
-		return delegate.getTotalTax();
-	}
-
-	public void setTotalTax(Money totalTax) {
-		delegate.setTotalTax(totalTax);
+	
+	public TaxDetail getFulfillmentGroupTax() {
+		return delegate.getFulfillmentGroupTax();
 	}
 
 	public String getDeliveryInstruction() {

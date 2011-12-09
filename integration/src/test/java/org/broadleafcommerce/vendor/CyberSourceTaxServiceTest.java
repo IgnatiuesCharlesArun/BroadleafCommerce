@@ -28,6 +28,7 @@ import org.broadleafcommerce.vendor.cybersource.service.CyberSourceServiceManage
 import org.broadleafcommerce.vendor.cybersource.service.message.CyberSourceBillingRequest;
 import org.broadleafcommerce.vendor.cybersource.service.tax.CyberSourceTaxService;
 import org.broadleafcommerce.vendor.cybersource.service.tax.message.CyberSourceTaxItemRequest;
+import org.broadleafcommerce.vendor.cybersource.service.tax.message.CyberSourceTaxItemResponse;
 import org.broadleafcommerce.vendor.cybersource.service.tax.message.CyberSourceTaxRequest;
 import org.broadleafcommerce.vendor.cybersource.service.tax.message.CyberSourceTaxResponse;
 import org.springframework.test.annotation.Rollback;
@@ -75,6 +76,7 @@ public class CyberSourceTaxServiceTest extends BaseTest {
         assert(!response.getRequestToken().equals("from-cache"));
         Money totalTaxAmount = response.getItemResponses()[0].getTotalTaxAmount();
         assert(totalTaxAmount != null && totalTaxAmount.greaterThan(new Money(0D)));
+        assertTaxSumsAreCorrect(response);
         
         //confirm that we used the cache
         CyberSourceTaxResponse response2 = (CyberSourceTaxResponse) service.process(taxRequest);
@@ -83,6 +85,28 @@ public class CyberSourceTaxServiceTest extends BaseTest {
         Money totalTaxAmount2 = response2.getItemResponses()[0].getTotalTaxAmount();
         assert(totalTaxAmount2 != null && totalTaxAmount2.greaterThan(new Money(0D)));
         assert(totalTaxAmount.equals(totalTaxAmount2));
+        assertTaxSumsAreCorrect(response2);
     }
-
+    
+    private void assertTaxSumsAreCorrect(CyberSourceTaxResponse response) {
+    	Money cityTaxAmount = new Money(0D);
+    	Money countyTaxAmount = new Money(0D);
+    	Money districtTaxAmount = new Money(0D);
+    	Money stateTaxAmount = new Money(0D);
+    	Money totalTaxAmount = new Money(0D);
+    	
+    	for (CyberSourceTaxItemResponse itemResponse : response.getItemResponses()) {
+    		cityTaxAmount = cityTaxAmount.add(itemResponse.getCityTaxAmount());
+    		countyTaxAmount = countyTaxAmount.add(itemResponse.getCountyTaxAmount());
+    		districtTaxAmount = districtTaxAmount.add(itemResponse.getDistrictTaxAmount());
+    		stateTaxAmount = stateTaxAmount.add(itemResponse.getStateTaxAmount());
+    		totalTaxAmount = totalTaxAmount.add(itemResponse.getTotalTaxAmount());
+    	}
+    	
+    	assert(response.getTotalCityTaxAmount().equals(cityTaxAmount));
+		assert(response.getTotalCountyTaxAmount().equals(countyTaxAmount));
+		assert(response.getTotalDistrictTaxAmount().equals(districtTaxAmount));
+		assert(response.getTotalStateTaxAmount().equals(stateTaxAmount));
+		assert(response.getTotalTaxAmount().equals(totalTaxAmount));
+    }
 }

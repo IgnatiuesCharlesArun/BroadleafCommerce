@@ -16,6 +16,9 @@
 
 package org.broadleafcommerce.core.order.domain;
 
+import java.io.Serializable;
+import java.util.List;
+
 import org.broadleafcommerce.core.offer.domain.CandidateFulfillmentGroupOffer;
 import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustment;
 import org.broadleafcommerce.core.order.service.type.FulfillmentGroupStatusType;
@@ -23,9 +26,6 @@ import org.broadleafcommerce.core.order.service.type.FulfillmentGroupType;
 import org.broadleafcommerce.money.Money;
 import org.broadleafcommerce.profile.core.domain.Address;
 import org.broadleafcommerce.profile.core.domain.Phone;
-
-import java.io.Serializable;
-import java.util.List;
 
 public interface FulfillmentGroup extends Serializable {
 
@@ -89,30 +89,10 @@ public interface FulfillmentGroup extends Serializable {
 
     public void removeAllAdjustments();
 
-    public Money getCityTax();
-
-    void setCityTax(Money cityTax);
-
-    public Money getCountyTax();
-
-    public void setCountyTax(Money countyTax);
-
-    public Money getStateTax();
-
-    public void setStateTax(Money stateTax);
+    public TaxDetail getFulfillmentGroupTax();
     
-    public Money getDistrictTax();
-
-    public void setDistrictTax(Money districtTax);
-
-    public Money getCountryTax();
-
-    public void setCountryTax(Money countryTax);
-
-    public Money getTotalTax();
-
-    public void setTotalTax(Money totalTax);
-
+    public TaxDetail getShippingTax();
+    
     public String getDeliveryInstruction();
 
     public void setDeliveryInstruction(String deliveryInstruction);

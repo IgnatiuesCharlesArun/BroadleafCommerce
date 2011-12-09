@@ -32,7 +32,7 @@ public class TotalActivity extends BaseActivity {
         Money total = new Money(BigDecimal.ZERO);
         total = total.add(order.getSubTotal());
         total = total.subtract(order.getOrderAdjustmentsValue());
-        total = total.add(order.getTotalTax());
+        total = total.add(order.getOrderTax().getTotalTax());
         total = total.add(order.getTotalShipping());
 
         Money fees = new Money(BigDecimal.ZERO);
@@ -40,7 +40,7 @@ public class TotalActivity extends BaseActivity {
             Money fgTotal = new Money(0D);
             fgTotal = fgTotal.add(fulfillmentGroup.getMerchandiseTotal());
             fgTotal = fgTotal.add(fulfillmentGroup.getShippingPrice());
-            fgTotal = fgTotal.add(fulfillmentGroup.getTotalTax());
+            fgTotal = fgTotal.add(fulfillmentGroup.getFulfillmentGroupTax().getTotalTax());
             
             for (FulfillmentGroupFee fulfillmentGroupFee : fulfillmentGroup.getFulfillmentGroupFees()) {
                 fgTotal = fgTotal.add(fulfillmentGroupFee.getAmount());
