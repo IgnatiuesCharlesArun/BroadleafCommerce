@@ -45,4 +45,9 @@ public interface FulfillmentGroupFee extends Serializable {
     public Boolean isTaxable();
 
     public void setTaxable(Boolean isTaxable);
+    
+    public TaxDetail getFeeTax();
+    
+	public TaxRateDetail getFeeTaxRate();
+	
 }

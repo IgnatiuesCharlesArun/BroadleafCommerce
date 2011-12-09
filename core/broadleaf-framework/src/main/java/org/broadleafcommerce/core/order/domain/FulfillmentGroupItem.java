@@ -48,6 +48,10 @@ public interface FulfillmentGroupItem extends Serializable {
 
     void setStatus(String status);
     
-    public void removeAssociations();
+    TaxDetail getItemTax();
+    
+	TaxRateDetail getItemTaxRate();
+	
+    void removeAssociations();
     
 }

@@ -18,6 +18,7 @@ package org.broadleafcommerce.core.order.domain;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -30,7 +31,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 
-import org.broadleafcommerce.core.offer.domain.CandidateItemOffer;
 import org.broadleafcommerce.money.Money;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -55,7 +55,7 @@ public class FulfillmentGroupItemImpl implements FulfillmentGroupItem {
     @JoinColumn(name = "FULFILLMENT_GROUP_ID")
     @Index(name="FGITEM_FG_INDEX", columnNames={"FULFILLMENT_GROUP_ID"})
     protected FulfillmentGroup fulfillmentGroup;
-
+ 
     @OneToOne(targetEntity = OrderItemImpl.class, optional=false)
     @JoinColumn(name = "ORDER_ITEM_ID")
     protected OrderItem orderItem;
@@ -66,7 +66,13 @@ public class FulfillmentGroupItemImpl implements FulfillmentGroupItem {
     @Column(name = "STATUS")
     @Index(name="FGITEM_STATUS_INDEX", columnNames={"STATUS"})
     private String status;
-
+    
+    @Embedded
+    protected TaxDetail itemTax = new TaxDetail();
+    
+    @Embedded
+    protected TaxRateDetail itemTaxRate = new TaxRateDetail();
+    
     public Long getId() {
         return id;
     }
@@ -119,7 +125,15 @@ public class FulfillmentGroupItemImpl implements FulfillmentGroupItem {
         this.status = status;
     }
     
-    public void removeAssociations() {
+    public TaxDetail getItemTax() {
+		return itemTax;
+	}
+    
+	public TaxRateDetail getItemTaxRate() {
+		return itemTaxRate;
+	}
+
+	public void removeAssociations() {
 		if (getFulfillmentGroup() != null) getFulfillmentGroup().getFulfillmentGroupItems().remove(this);
 		setFulfillmentGroup(null);
 		setOrderItem(null);

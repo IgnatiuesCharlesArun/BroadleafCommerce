@@ -16,7 +16,43 @@
 
 package org.broadleafcommerce.core.order.domain;
 
-import org.broadleafcommerce.core.offer.domain.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+
+import org.broadleafcommerce.core.offer.domain.CandidateOrderOffer;
+import org.broadleafcommerce.core.offer.domain.CandidateOrderOfferImpl;
+import org.broadleafcommerce.core.offer.domain.Offer;
+import org.broadleafcommerce.core.offer.domain.OfferCode;
+import org.broadleafcommerce.core.offer.domain.OfferCodeImpl;
+import org.broadleafcommerce.core.offer.domain.OfferImpl;
+import org.broadleafcommerce.core.offer.domain.OfferInfo;
+import org.broadleafcommerce.core.offer.domain.OfferInfoImpl;
+import org.broadleafcommerce.core.offer.domain.OrderAdjustment;
+import org.broadleafcommerce.core.offer.domain.OrderAdjustmentImpl;
 import org.broadleafcommerce.core.order.service.type.OrderStatus;
 import org.broadleafcommerce.core.payment.domain.PaymentInfo;
 import org.broadleafcommerce.core.payment.domain.PaymentInfoImpl;
@@ -24,19 +60,18 @@ import org.broadleafcommerce.money.Money;
 import org.broadleafcommerce.openadmin.audit.Auditable;
 import org.broadleafcommerce.openadmin.audit.AuditableListener;
 import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
-import org.broadleafcommerce.presentation.*;
+import org.broadleafcommerce.presentation.AdminPresentation;
+import org.broadleafcommerce.presentation.AdminPresentationClass;
+import org.broadleafcommerce.presentation.AdminPresentationOverride;
+import org.broadleafcommerce.presentation.AdminPresentationOverrides;
+import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
 import org.broadleafcommerce.profile.core.domain.Customer;
 import org.broadleafcommerce.profile.core.domain.CustomerImpl;
 import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.*;
-
-import javax.persistence.CascadeType;
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
-import java.math.BigDecimal;
-import java.util.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.MapKeyManyToMany;
 
 @Entity
 @EntityListeners(value = { AuditableListener.class })
@@ -81,30 +116,9 @@ public class OrderImpl implements Order {
     @Index(name="ORDER_STATUS_INDEX", columnNames={"ORDER_STATUS"})
     @AdminPresentation(friendlyName="Order Status", group="Order", order=2, prominent=true, fieldType=SupportedFieldType.BROADLEAF_ENUMERATION, broadleafEnumeration="org.broadleafcommerce.core.order.service.type.OrderStatus")
     protected String status;
-
-    @Column(name = "CITY_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Order City Tax", group="Order", order=4, fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal cityTax;
-
-    @Column(name = "COUNTY_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Order County Tax", group="Order", order=5, fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal countyTax;
-
-    @Column(name = "STATE_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Order State Tax", group="Order", order=6, fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal stateTax;
     
-    @Column(name = "DISTRICT_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Order District Tax", group="Order", order=7, fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal districtTax;
-
-    @Column(name = "COUNTRY_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Order Country Tax", group="Order", order=8, fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal countryTax;
-
-    @Column(name = "TOTAL_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Order Total Tax", group="Order", order=9, fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal totalTax;
+    @Embedded
+    protected TaxDetail orderTax = new TaxDetail();
 
     @Column(name = "TOTAL_SHIPPING", precision=19, scale=5)
     @AdminPresentation(friendlyName="Order Total Shipping", group="Order", order=10, fieldType=SupportedFieldType.MONEY)
@@ -296,55 +310,11 @@ public class OrderImpl implements Order {
         this.name = name;
     }
 
-    public Money getCityTax() {
-        return cityTax == null ? null : new Money(cityTax);
-    }
+	public TaxDetail getOrderTax() {
+		return orderTax;
+	}
 
-    public void setCityTax(Money cityTax) {
-        this.cityTax = Money.toAmount(cityTax);
-    }
-
-    public Money getCountyTax() {
-        return countyTax == null ? null : new Money(countyTax);
-    }
-
-    public void setCountyTax(Money countyTax) {
-        this.countyTax = Money.toAmount(countyTax);
-    }
-
-    public Money getStateTax() {
-        return stateTax == null ? null : new Money(stateTax);
-    }
-
-    public void setStateTax(Money stateTax) {
-        this.stateTax = Money.toAmount(stateTax);
-    }
-    
-    public Money getDistrictTax() {
-        return districtTax == null ? null : new Money(districtTax);
-    }
-
-    public void setDistrictTax(Money districtTax) {
-        this.districtTax = Money.toAmount(districtTax);
-    }
-
-    public Money getCountryTax() {
-        return countryTax == null ? null : new Money(countryTax);
-    }
-
-    public void setCountryTax(Money countryTax) {
-        this.countryTax = Money.toAmount(countryTax);
-    }
-
-    public Money getTotalTax() {
-        return totalTax == null ? null : new Money(totalTax);
-    }
-
-    public void setTotalTax(Money totalTax) {
-        this.totalTax = Money.toAmount(totalTax);
-    }
-
-    public Money getTotalShipping() {
+	public Money getTotalShipping() {
         return totalShipping == null ? null : new Money(totalShipping);
     }
 

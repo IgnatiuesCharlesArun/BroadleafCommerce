@@ -16,29 +16,16 @@
 
 package org.broadleafcommerce.core.order.domain;
 
-import org.broadleafcommerce.core.offer.domain.CandidateFulfillmentGroupOffer;
-import org.broadleafcommerce.core.offer.domain.CandidateFulfillmentGroupOfferImpl;
-import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustment;
-import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustmentImpl;
-import org.broadleafcommerce.core.order.service.type.FulfillmentGroupStatusType;
-import org.broadleafcommerce.core.order.service.type.FulfillmentGroupType;
-import org.broadleafcommerce.money.Money;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
-import org.broadleafcommerce.profile.core.domain.Address;
-import org.broadleafcommerce.profile.core.domain.AddressImpl;
-import org.broadleafcommerce.profile.core.domain.Phone;
-import org.broadleafcommerce.profile.core.domain.PhoneImpl;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Index;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -50,16 +37,45 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
+
+import org.broadleafcommerce.core.offer.domain.CandidateFulfillmentGroupOffer;
+import org.broadleafcommerce.core.offer.domain.CandidateFulfillmentGroupOfferImpl;
+import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustment;
+import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustmentImpl;
+import org.broadleafcommerce.core.order.service.type.FulfillmentGroupStatusType;
+import org.broadleafcommerce.core.order.service.type.FulfillmentGroupType;
+import org.broadleafcommerce.money.Money;
+import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
+import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
+import org.broadleafcommerce.presentation.AdminPresentation;
+import org.broadleafcommerce.presentation.AdminPresentationClass;
+import org.broadleafcommerce.presentation.AdminPresentationOverride;
+import org.broadleafcommerce.presentation.AdminPresentationOverrides;
+import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
+import org.broadleafcommerce.profile.core.domain.Address;
+import org.broadleafcommerce.profile.core.domain.AddressImpl;
+import org.broadleafcommerce.profile.core.domain.Phone;
+import org.broadleafcommerce.profile.core.domain.PhoneImpl;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Index;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "BLC_FULFILLMENT_GROUP")
 @Cache(usage=CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region="blOrderElements")
 @AdminPresentationClass(populateToOneFields = PopulateToOneFieldsEnum.TRUE, friendlyName = "baseFulfillmentGroup")
+@AdminPresentationOverrides(
+    {
+        @AdminPresentationOverride(name="shippingTax.cityTax", value=@AdminPresentation(friendlyName = "Shipping City Tax")),
+        @AdminPresentationOverride(name="shippingTax.countyTax", value=@AdminPresentation(friendlyName = "Shipping County Tax")),
+        @AdminPresentationOverride(name="shippingTax.stateTax", value=@AdminPresentation(friendlyName = "Shipping State Tax")),
+        @AdminPresentationOverride(name="shippingTax.districtTax", value=@AdminPresentation(friendlyName = "Shipping District Tax")),
+        @AdminPresentationOverride(name="shippingTax.countryTax", value=@AdminPresentation(friendlyName = "Shipping Country Tax")),
+        @AdminPresentationOverride(name="shippingTax.totalTax", value=@AdminPresentation(friendlyName = "Shipping Total Tax"))
+    }
+)
 public class FulfillmentGroupImpl implements FulfillmentGroup {
 
     private static final long serialVersionUID = 1L;
@@ -132,30 +148,6 @@ public class FulfillmentGroupImpl implements FulfillmentGroup {
     @Cache(usage=CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region="blOrderElements")
     protected List<FulfillmentGroupAdjustment> fulfillmentGroupAdjustments = new ArrayList<FulfillmentGroupAdjustment>();
 
-    @Column(name = "CITY_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="FG City Tax", order=4, group="Pricing", fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal cityTax;
-
-    @Column(name = "COUNTY_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="FG County Tax", order=5, group="Pricing", fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal countyTax;
-
-    @Column(name = "STATE_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="FG State Tax", order=6, group="Pricing", fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal stateTax;
-    
-    @Column(name = "DISTRICT_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="FG District Tax", order=7, group="Pricing", fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal districtTax;
-
-    @Column(name = "COUNTRY_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="FG Country Tax", order=8, group="Pricing", fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal countryTax;
-
-    @Column(name = "TOTAL_TAX", precision=19, scale=5)
-    @AdminPresentation(friendlyName="FG Total Tax", order=9, group="Pricing", fieldType=SupportedFieldType.MONEY)
-    protected BigDecimal totalTax;
-
     @Column(name = "DELIVERY_INSTRUCTION")
     @AdminPresentation(friendlyName="FG Delivery Instruction", order=4, group="Description")
     protected String deliveryInstruction;
@@ -191,6 +183,22 @@ public class FulfillmentGroupImpl implements FulfillmentGroup {
     @Column(name = "SHIPPING_PRICE_TAXABLE")
     @AdminPresentation(friendlyName="Shipping Price Taxable", order=7, group="Pricing")
     protected Boolean isShippingPriceTaxable = Boolean.FALSE;
+    
+    @Embedded
+    protected TaxDetail fulfillmentGroupTax = new TaxDetail();
+    
+    @Embedded
+    @AttributeOverrides(
+    	{
+    		@AttributeOverride(name="cityTax", column = @Column(name="SHIPPING_CITY_TAX")),
+    		@AttributeOverride(name="countyTax", column = @Column(name="SHIPPING_COUNTY_TAX")),
+    		@AttributeOverride(name="stateTax", column = @Column(name="SHIPPING_STATE_TAX")),
+    		@AttributeOverride(name="districtTax", column = @Column(name="SHIPPING_DISTRICT_TAX")),
+    		@AttributeOverride(name="countryTax", column = @Column(name="SHIPPING_COUNTRY_TAX")),
+    		@AttributeOverride(name="totalTax", column = @Column(name="SHIPPING_TOTAL_TAX"))
+    	}
+    )
+    protected TaxDetail shippingTax = new TaxDetail();
 
     public Long getId() {
         return id;
@@ -352,54 +360,6 @@ public class FulfillmentGroupImpl implements FulfillmentGroup {
         this.shippingPrice = Money.toAmount(shippingPrice);
     }
 
-    public Money getCityTax() {
-        return cityTax == null ? null : new Money(cityTax);
-    }
-
-    public void setCityTax(Money cityTax) {
-        this.cityTax = Money.toAmount(cityTax);
-    }
-
-    public Money getCountyTax() {
-        return countyTax == null ? null : new Money(countyTax);
-    }
-
-    public void setCountyTax(Money countyTax) {
-        this.countyTax = Money.toAmount(countyTax);
-    }
-
-    public Money getStateTax() {
-        return stateTax == null ? null : new Money(stateTax);
-    }
-
-    public void setStateTax(Money stateTax) {
-        this.stateTax = Money.toAmount(stateTax);
-    }
-    
-    public Money getDistrictTax() {
-        return districtTax == null ? null : new Money(districtTax);
-    }
-
-    public void setDistrictTax(Money districtTax) {
-        this.districtTax = Money.toAmount(districtTax);
-    }
-
-    public Money getCountryTax() {
-        return countryTax == null ? null : new Money(countryTax);
-    }
-
-    public void setCountryTax(Money countryTax) {
-        this.countryTax = Money.toAmount(countryTax);
-    }
-
-    public Money getTotalTax() {
-        return totalTax == null ? null : new Money(totalTax);
-    }
-
-    public void setTotalTax(Money totalTax) {
-        this.totalTax = Money.toAmount(totalTax);
-    }
-
     public String getDeliveryInstruction() {
         return deliveryInstruction;
     }
@@ -483,6 +443,14 @@ public class FulfillmentGroupImpl implements FulfillmentGroup {
 
 	public void setService(String service) {
 		this.service = service;
+	}
+	
+	public TaxDetail getFulfillmentGroupTax() {
+		return fulfillmentGroupTax;
+	}
+
+	public TaxDetail getShippingTax() {
+		return shippingTax;
 	}
 
 	public int hashCode() {

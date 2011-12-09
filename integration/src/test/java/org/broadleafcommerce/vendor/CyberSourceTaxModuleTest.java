@@ -25,6 +25,7 @@ import org.broadleafcommerce.core.catalog.domain.SkuImpl;
 import org.broadleafcommerce.core.order.domain.DiscreteOrderItem;
 import org.broadleafcommerce.core.order.domain.DiscreteOrderItemImpl;
 import org.broadleafcommerce.core.order.domain.FulfillmentGroup;
+import org.broadleafcommerce.core.order.domain.FulfillmentGroupFee;
 import org.broadleafcommerce.core.order.domain.FulfillmentGroupImpl;
 import org.broadleafcommerce.core.order.domain.FulfillmentGroupItem;
 import org.broadleafcommerce.core.order.domain.FulfillmentGroupItemImpl;
@@ -110,10 +111,95 @@ public class CyberSourceTaxModuleTest extends BaseTest {
 		order.getFulfillmentGroups().add(fg2);
 		order.setTotal(new Money(50D));
 		
-		assert(order.getTotalTax() == null);
+		assert(order.getOrderTax().getTotalTax() == null);
 		order = module.calculateTaxForOrder(order);
-		assert(order.getTotalTax() != null && order.getTotalTax().greaterThan(new Money(0D)));
-		assert(order.getFulfillmentGroups().get(0).getTotalTax().add(order.getFulfillmentGroups().get(1).getTotalTax()).equals(order.getTotalTax()));
+		assert(order.getOrderTax().getTotalTax() != null && order.getOrderTax().getTotalTax().greaterThan(new Money(0D)));
+		assertTaxSumsAreCorrect(order);
+	}
+	
+	private void assertTaxSumsAreCorrect(Order order) {
+    	Money cityTaxAmount = new Money(0D);
+    	Money countyTaxAmount = new Money(0D);
+    	Money districtTaxAmount = new Money(0D);
+    	Money stateTaxAmount = new Money(0D);
+    	Money countryTaxAmount = new Money(0D);
+    	Money totalTaxAmount = new Money(0D);
+    	
+    	for (FulfillmentGroup fg : order.getFulfillmentGroups()) {
+	    	Money fgCityTaxAmount = new Money(0D);
+	    	Money fgCountyTaxAmount = new Money(0D);
+	    	Money fgDistrictTaxAmount = new Money(0D);
+	    	Money fgStateTaxAmount = new Money(0D);
+	    	Money fgCountryTaxAmount = new Money(0D);
+	    	Money fgTotalTaxAmount = new Money(0D);
+	    	
+	    	// Add the shipping taxes into the order total taxes
+    		cityTaxAmount = cityTaxAmount.add(fg.getShippingTax().getCityTax());
+    		countyTaxAmount = countyTaxAmount.add(fg.getShippingTax().getCountyTax());
+    		districtTaxAmount = districtTaxAmount.add(fg.getShippingTax().getDistrictTax());
+    		stateTaxAmount = stateTaxAmount.add(fg.getShippingTax().getStateTax());
+    		countryTaxAmount = countryTaxAmount.add(fg.getShippingTax().getCountryTax());
+    		totalTaxAmount = totalTaxAmount.add(fg.getShippingTax().getTotalTax());
+	    	
+	    	// Add the shipping taxes into this fulfillment group's taxes
+    		fgCityTaxAmount = fgCityTaxAmount.add(fg.getShippingTax().getCityTax());
+    		fgCountyTaxAmount = fgCountyTaxAmount.add(fg.getShippingTax().getCountyTax());
+    		fgDistrictTaxAmount = fgDistrictTaxAmount.add(fg.getShippingTax().getDistrictTax());
+    		fgStateTaxAmount = fgStateTaxAmount.add(fg.getShippingTax().getStateTax());
+    		fgCountryTaxAmount = fgCountryTaxAmount.add(fg.getShippingTax().getCountryTax());
+    		fgTotalTaxAmount = fgTotalTaxAmount.add(fg.getShippingTax().getTotalTax());
+	    	
+	    	for (FulfillmentGroupItem item : fg.getFulfillmentGroupItems()) {
+	    		// Add the item tax into the total order tax
+	    		cityTaxAmount = cityTaxAmount.add(item.getItemTax().getCityTax());
+	    		countyTaxAmount = countyTaxAmount.add(item.getItemTax().getCountyTax());
+	    		districtTaxAmount = districtTaxAmount.add(item.getItemTax().getDistrictTax());
+	    		stateTaxAmount = stateTaxAmount.add(item.getItemTax().getStateTax());
+	    		countryTaxAmount = countryTaxAmount.add(item.getItemTax().getCountryTax());
+	    		totalTaxAmount = totalTaxAmount.add(item.getItemTax().getTotalTax());
+	    		
+	    		// Add the item tax into this fulfillment group's taxes
+	    		fgCityTaxAmount = fgCityTaxAmount.add(item.getItemTax().getCityTax());
+	    		fgCountyTaxAmount = fgCountyTaxAmount.add(item.getItemTax().getCountyTax());
+	    		fgDistrictTaxAmount = fgDistrictTaxAmount.add(item.getItemTax().getDistrictTax());
+	    		fgStateTaxAmount = fgStateTaxAmount.add(item.getItemTax().getStateTax());
+	    		fgCountryTaxAmount = fgCountryTaxAmount.add(item.getItemTax().getCountryTax());
+	    		fgTotalTaxAmount = fgTotalTaxAmount.add(item.getItemTax().getTotalTax());
+	    	}
+	    	
+	    	for (FulfillmentGroupFee fee : fg.getFulfillmentGroupFees()) {
+	    		// Add the fee tax into the total order tax
+	    		cityTaxAmount = cityTaxAmount.add(fee.getFeeTax().getCityTax());
+	    		countyTaxAmount = countyTaxAmount.add(fee.getFeeTax().getCountyTax());
+	    		districtTaxAmount = districtTaxAmount.add(fee.getFeeTax().getDistrictTax());
+	    		stateTaxAmount = stateTaxAmount.add(fee.getFeeTax().getStateTax());
+	    		countryTaxAmount = countryTaxAmount.add(fee.getFeeTax().getCountryTax());
+	    		totalTaxAmount = totalTaxAmount.add(fee.getFeeTax().getTotalTax());
+	    		
+	    		// Add the fee tax into this fulfillment group's taxes
+	    		fgCityTaxAmount = fgCityTaxAmount.add(fee.getFeeTax().getCityTax());
+	    		fgCountyTaxAmount = fgCountyTaxAmount.add(fee.getFeeTax().getCountyTax());
+	    		fgDistrictTaxAmount = fgDistrictTaxAmount.add(fee.getFeeTax().getDistrictTax());
+	    		fgStateTaxAmount = fgStateTaxAmount.add(fee.getFeeTax().getStateTax());
+	    		fgCountryTaxAmount = fgCountryTaxAmount.add(fee.getFeeTax().getCountryTax());
+	    		fgTotalTaxAmount = fgTotalTaxAmount.add(fee.getFeeTax().getTotalTax());
+	    	}
+	    	
+	    	// Assert that this fulfillment group's taxes are correct
+	    	assert(fgCityTaxAmount.equals(fg.getFulfillmentGroupTax().getCityTax()));
+	    	assert(fgCountyTaxAmount.equals(fg.getFulfillmentGroupTax().getCountyTax()));
+	    	assert(fgDistrictTaxAmount.equals(fg.getFulfillmentGroupTax().getDistrictTax()));
+	    	assert(fgStateTaxAmount.equals(fg.getFulfillmentGroupTax().getStateTax()));
+	    	assert(fgCountryTaxAmount.equals(fg.getFulfillmentGroupTax().getCountryTax()));
+	    	assert(fgTotalTaxAmount.equals(fg.getFulfillmentGroupTax().getTotalTax()));
+    	}
+    	
+    	assert(cityTaxAmount.equals(order.getOrderTax().getCityTax()));
+    	assert(countyTaxAmount.equals(order.getOrderTax().getCountyTax()));
+    	assert(districtTaxAmount.equals(order.getOrderTax().getDistrictTax()));
+    	assert(stateTaxAmount.equals(order.getOrderTax().getStateTax()));
+    	assert(countryTaxAmount.equals(order.getOrderTax().getCountryTax()));
+    	assert(totalTaxAmount.equals(order.getOrderTax().getTotalTax()));
 	}
 	
 	private PaymentInfo createPaymentInfo(String line1, String city, final String country, String name, String lastName, String postalCode, final String state) {
