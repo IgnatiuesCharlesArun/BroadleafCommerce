@@ -91,7 +91,11 @@ public interface FulfillmentGroup extends Serializable {
 
     public TaxDetail getFulfillmentGroupTax();
     
+	public void setFulfillmentGroupTax(TaxDetail fulfillmentGroupTax);
+    
     public TaxDetail getShippingTax();
+	
+	public void setShippingTax(TaxDetail shippingTax);
     
     public String getDeliveryInstruction();
 

@@ -68,10 +68,10 @@ public class FulfillmentGroupItemImpl implements FulfillmentGroupItem {
     private String status;
     
     @Embedded
-    protected TaxDetail itemTax = new TaxDetail();
+    protected TaxDetail itemTax;
     
     @Embedded
-    protected TaxRateDetail itemTaxRate = new TaxRateDetail();
+    protected TaxRateDetail itemTaxRate;
     
     public Long getId() {
         return id;
@@ -129,8 +129,16 @@ public class FulfillmentGroupItemImpl implements FulfillmentGroupItem {
 		return itemTax;
 	}
     
+	public void setItemTax(TaxDetail itemTax) {
+		this.itemTax = itemTax;
+	}
+
 	public TaxRateDetail getItemTaxRate() {
 		return itemTaxRate;
+	}
+	
+	public void setItemTaxRate(TaxRateDetail itemTaxRate) {
+		this.itemTaxRate = itemTaxRate;
 	}
 
 	public void removeAssociations() {

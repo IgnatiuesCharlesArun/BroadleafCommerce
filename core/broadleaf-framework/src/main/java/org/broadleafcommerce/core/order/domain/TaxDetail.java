@@ -87,53 +87,57 @@ public class TaxDetail implements Serializable {
         this.totalTax = Money.toAmount(totalTax);
     }
     
-    public void zeroAllTaxes() {
-    	setCityTax(new Money(0D));
-    	setCountyTax(new Money(0D));
-    	setDistrictTax(new Money(0D));
-    	setStateTax(new Money(0D));
-    	setCountryTax(new Money(0D));
-    	setTotalTax(new Money(0D));
-    }
-    
     public void addToCityTax(Money taxAmount) {
-    	if (cityTax == null) {
-    		cityTax = Money.toAmount(new Money(0D));
+    	if (taxAmount != null) {
+	    	if (cityTax == null) {
+	    		cityTax = Money.toAmount(new Money(0D));
+	    	}
+    		cityTax = cityTax.add(Money.toAmount(taxAmount));
     	}
-    	cityTax = cityTax.add(Money.toAmount(taxAmount));
     }
     
     public void addToCountyTax(Money taxAmount) {
-    	if (countyTax == null) {
-    		countyTax = Money.toAmount(new Money(0D));
-    	}
-    	countyTax = countyTax.add(Money.toAmount(taxAmount));
+    	if (taxAmount != null) {
+	    	if (countyTax == null) {
+	    		countyTax = Money.toAmount(new Money(0D));
+	    	}
+    		countyTax = countyTax.add(Money.toAmount(taxAmount));
+    	}	
     }
     
     public void addToDistrictTax(Money taxAmount) {
-    	if (districtTax == null) {
-    		districtTax = Money.toAmount(new Money(0D));
+    	if (taxAmount != null) {
+	    	if (districtTax == null) {
+	    		districtTax = Money.toAmount(new Money(0D));
+	    	}
+    		districtTax = districtTax.add(Money.toAmount(taxAmount));
     	}
-    	districtTax = districtTax.add(Money.toAmount(taxAmount));
     }
     
     public void addToStateTax(Money taxAmount) {
-    	if (stateTax == null) {
-    		stateTax = Money.toAmount(new Money(0D));
+    	if (taxAmount != null) {
+	    	if (stateTax == null) {
+	    		stateTax = Money.toAmount(new Money(0D));
+	    	}
+    		stateTax = stateTax.add(Money.toAmount(taxAmount));
     	}
-    	stateTax = stateTax.add(Money.toAmount(taxAmount));
     }
+    	
     public void addToCountryTax(Money taxAmount) {
-    	if (countryTax == null) {
-    		countryTax = Money.toAmount(new Money(0D));
+    	if (taxAmount != null) {
+	    	if (countryTax == null) {
+	    		countryTax = Money.toAmount(new Money(0D));
+	    	}
+    		countryTax = countryTax.add(Money.toAmount(taxAmount));
     	}
-    	countryTax = countryTax.add(Money.toAmount(taxAmount));
     }
     
     public void addToTotalTax(Money taxAmount) {
-    	if (totalTax == null) {
-    		totalTax = Money.toAmount(new Money(0D));
+    	if (taxAmount != null) {
+	    	if (totalTax == null) {
+	    		totalTax = Money.toAmount(new Money(0D));
+	    	}
+    		totalTax = totalTax.add(Money.toAmount(taxAmount));
     	}
-    	totalTax = totalTax.add(Money.toAmount(taxAmount));
     }
 }

@@ -37,33 +37,27 @@ public class SimpleTaxModule implements TaxModule {
     protected Double factor;
 
     public Order calculateTaxForOrder(Order order) throws TaxException {
-    	Money subTotal = order.calculateOrderItemsFinalPrice(false);
-    	
     	for (FulfillmentGroup fulfillmentGroup : order.getFulfillmentGroups()) {
-            for (FulfillmentGroupFee fulfillmentGroupFee : fulfillmentGroup.getFulfillmentGroupFees()) {
-                if (fulfillmentGroupFee.isTaxable()) {
-                	subTotal = subTotal.add(fulfillmentGroupFee.getAmount());
+        	for (FulfillmentGroupItem fgItem : fulfillmentGroup.getFulfillmentGroupItems()) {
+        		Money itemTax = fgItem.getPrice().multiply(factor);
+        		fgItem.getItemTax().setTotalTax(itemTax);
+        	}
+        	
+            for (FulfillmentGroupFee fgFee : fulfillmentGroup.getFulfillmentGroupFees()) {
+                if (fgFee.isTaxable()) {
+                	Money feeTax = fgFee.getAmount().multiply(factor);
+                	fgFee.getFeeTax().setTotalTax(feeTax);
                 }
             }
-        }
-    	
-        for (FulfillmentGroup fulfillmentGroup : order.getFulfillmentGroups()) {
+            
         	if (fulfillmentGroup.isShippingPriceTaxable() == null || fulfillmentGroup.isShippingPriceTaxable()) {
 	            Money shippingTotalTax = fulfillmentGroup.getShippingPrice().multiply(factor);
 	            fulfillmentGroup.getShippingTax().setTotalTax(shippingTotalTax);
-	            fulfillmentGroup.getFulfillmentGroupTax().addToTotalTax(shippingTotalTax);
         	} else {
 	            fulfillmentGroup.getShippingTax().setTotalTax(new Money(0D));
         	}
         	
-        	for (FulfillmentGroupItem fgItem : fulfillmentGroup.getFulfillmentGroupItems()) {
-        		Money itemTax = fgItem.getPrice().multiply(factor);
-        		fgItem.getItemTax().setTotalTax(itemTax);
-        		fulfillmentGroup.getFulfillmentGroupTax().addToTotalTax(itemTax);
-        		order.getOrderTax().addToTotalTax(itemTax);
-        	}
         }
-
         return order;
     }
 

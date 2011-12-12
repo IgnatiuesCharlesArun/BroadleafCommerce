@@ -48,6 +48,10 @@ public interface FulfillmentGroupFee extends Serializable {
     
     public TaxDetail getFeeTax();
     
+    void setFeeTax(TaxDetail itemTax);
+    
 	public TaxRateDetail getFeeTaxRate();
+    
+    void setFeeTaxRate(TaxRateDetail itemTaxRate);
 	
 }

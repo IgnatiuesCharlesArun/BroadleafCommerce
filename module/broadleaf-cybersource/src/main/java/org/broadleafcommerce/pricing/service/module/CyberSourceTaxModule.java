@@ -31,6 +31,7 @@ import org.broadleafcommerce.core.order.domain.FulfillmentGroupItem;
 import org.broadleafcommerce.core.order.domain.Order;
 import org.broadleafcommerce.core.order.domain.OrderItem;
 import org.broadleafcommerce.core.order.domain.TaxDetail;
+import org.broadleafcommerce.core.order.domain.TaxRateDetail;
 import org.broadleafcommerce.core.pricing.service.exception.TaxException;
 import org.broadleafcommerce.core.pricing.service.module.TaxModule;
 import org.broadleafcommerce.money.Money;
@@ -81,45 +82,12 @@ public class CyberSourceTaxModule extends CyberSourceModule implements TaxModule
     }
 
 	private void calculateTaxes(Order order, HashMap<Long, CyberSourceTaxItemRequest> requestLibrary, CyberSourceTaxResponse response) {
-		// Clear all taxes on the order, all fulfillment groups, and all fulfillment group items and fees
-		order.getOrderTax().zeroAllTaxes();
-		for (FulfillmentGroup fg : order.getFulfillmentGroups()) {
-			fg.getShippingTax().zeroAllTaxes();
-			fg.getFulfillmentGroupTax().zeroAllTaxes();
-			for (FulfillmentGroupItem fgItem : fg.getFulfillmentGroupItems()) {
-				fgItem.getItemTax().zeroAllTaxes();
-			}
-			for (FulfillmentGroupFee fgFee : fg.getFulfillmentGroupFees()) {
-				fgFee.getFeeTax().zeroAllTaxes();
-			}
-		}
-		
 		for (CyberSourceTaxItemResponse itemResponse : response.getItemResponses()) {
 			CyberSourceTaxItemRequest itemRequest = requestLibrary.get(itemResponse.getId().longValue());
-			
-			// Add the taxes for this item into the total order taxes
-			order.getOrderTax().addToCityTax(itemResponse.getCityTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-			order.getOrderTax().addToCountyTax(itemResponse.getCountyTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-			order.getOrderTax().addToDistrictTax(itemResponse.getDistrictTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-			order.getOrderTax().addToStateTax(itemResponse.getStateTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-			order.getOrderTax().addToTotalTax(itemResponse.getTotalTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
 			
 			FulfillmentGroupImpl searchParam = new FulfillmentGroupImpl();
 			searchParam.setId(itemRequest.getNonCyberSourceFulfillmentGroupId());
 			FulfillmentGroup myGroup = order.getFulfillmentGroups().get(order.getFulfillmentGroups().indexOf(searchParam));
-			
-			// Add the taxes for this item into the total fulfillment group taxes
-			TaxDetail taxes;
-			if (itemRequest.getProductName().equals("Shipping Cost")) {
-				taxes = myGroup.getShippingTax();
-			} else {
-				taxes = myGroup.getFulfillmentGroupTax();
-			}
-			taxes.addToCityTax(itemResponse.getCityTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-			taxes.addToCountyTax(itemResponse.getCountyTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-			taxes.addToDistrictTax(itemResponse.getDistrictTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-			taxes.addToStateTax(itemResponse.getStateTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-			taxes.addToTotalTax(itemResponse.getTotalTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
 			
 			String searchItemParam = itemRequest.getNonCyberSourceItemIdentifier();
 			Boolean isFeeTax = searchItemParam.contains("Fee") ? true : false;
@@ -127,11 +95,13 @@ public class CyberSourceTaxModule extends CyberSourceModule implements TaxModule
 			
 			if (isFeeTax) { 
 				FulfillmentGroupFee fee = myGroup.getFulfillmentGroupFees().get(index);
-				fee.getFeeTax().setCityTax(itemResponse.getCityTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-				fee.getFeeTax().setCountyTax(itemResponse.getCountyTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-				fee.getFeeTax().setDistrictTax(itemResponse.getDistrictTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-				fee.getFeeTax().setStateTax(itemResponse.getStateTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-				fee.getFeeTax().setTotalTax(itemResponse.getTotalTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
+				fee.setFeeTax(new TaxDetail());
+				fee.getFeeTax().setCityTax(itemResponse.getCityTaxAmount());
+				fee.getFeeTax().setCountyTax(itemResponse.getCountyTaxAmount());
+				fee.getFeeTax().setDistrictTax(itemResponse.getDistrictTaxAmount());
+				fee.getFeeTax().setStateTax(itemResponse.getStateTaxAmount());
+				fee.getFeeTax().setTotalTax(itemResponse.getTotalTaxAmount());
+				fee.setFeeTaxRate(new TaxRateDetail());
 				fee.getFeeTaxRate().setCityTaxRate(response.getCityRate());
 				fee.getFeeTaxRate().setCountyTaxRate(response.getCityRate());
 				fee.getFeeTaxRate().setDistrictTaxRate(response.getDistrictRate());
@@ -139,11 +109,13 @@ public class CyberSourceTaxModule extends CyberSourceModule implements TaxModule
 				fee.getFeeTaxRate().setTotalTaxRate(response.getTotalRate());
 			} else {
 				FulfillmentGroupItem item = myGroup.getFulfillmentGroupItems().get(index);
-				item.getItemTax().setCityTax(itemResponse.getCityTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-				item.getItemTax().setCountyTax(itemResponse.getCountyTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-				item.getItemTax().setDistrictTax(itemResponse.getDistrictTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-				item.getItemTax().setStateTax(itemResponse.getStateTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
-				item.getItemTax().setTotalTax(itemResponse.getTotalTaxAmount().multiply(itemRequest.getNonCyberSourceQuantity()));
+				item.setItemTax(new TaxDetail());
+				item.getItemTax().setCityTax(itemResponse.getCityTaxAmount());
+				item.getItemTax().setCountyTax(itemResponse.getCountyTaxAmount());
+				item.getItemTax().setDistrictTax(itemResponse.getDistrictTaxAmount());
+				item.getItemTax().setStateTax(itemResponse.getStateTaxAmount());
+				item.getItemTax().setTotalTax(itemResponse.getTotalTaxAmount());
+				item.setItemTaxRate(new TaxRateDetail());
 				item.getItemTaxRate().setCityTaxRate(response.getCityRate());
 				item.getItemTaxRate().setCountyTaxRate(response.getCityRate());
 				item.getItemTaxRate().setDistrictTaxRate(response.getDistrictRate());

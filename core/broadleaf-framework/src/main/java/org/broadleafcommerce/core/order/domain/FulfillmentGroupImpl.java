@@ -185,7 +185,7 @@ public class FulfillmentGroupImpl implements FulfillmentGroup {
     protected Boolean isShippingPriceTaxable = Boolean.FALSE;
     
     @Embedded
-    protected TaxDetail fulfillmentGroupTax = new TaxDetail();
+    protected TaxDetail fulfillmentGroupTax;
     
     @Embedded
     @AttributeOverrides(
@@ -198,7 +198,7 @@ public class FulfillmentGroupImpl implements FulfillmentGroup {
     		@AttributeOverride(name="totalTax", column = @Column(name="SHIPPING_TOTAL_TAX"))
     	}
     )
-    protected TaxDetail shippingTax = new TaxDetail();
+    protected TaxDetail shippingTax;
 
     public Long getId() {
         return id;
@@ -449,8 +449,16 @@ public class FulfillmentGroupImpl implements FulfillmentGroup {
 		return fulfillmentGroupTax;
 	}
 
+	public void setFulfillmentGroupTax(TaxDetail fulfillmentGroupTax) {
+		this.fulfillmentGroupTax = fulfillmentGroupTax;
+	}
+	
 	public TaxDetail getShippingTax() {
 		return shippingTax;
+	}
+
+	public void setShippingTax(TaxDetail shippingTax) {
+		this.shippingTax = shippingTax;
 	}
 
 	public int hashCode() {

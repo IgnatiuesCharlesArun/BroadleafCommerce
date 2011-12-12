@@ -68,10 +68,10 @@ public class FulfillmentGroupFeeImpl implements FulfillmentGroupFee {
     private Boolean isTaxable = Boolean.FALSE;
     
     @Embedded
-    protected TaxDetail feeTax = new TaxDetail();
+    protected TaxDetail feeTax;
     
     @Embedded
-    protected TaxRateDetail feeTaxRate = new TaxRateDetail();
+    protected TaxRateDetail feeTaxRate;
 
     public Long getId() {
         return id;
@@ -131,6 +131,10 @@ public class FulfillmentGroupFeeImpl implements FulfillmentGroupFee {
 	
 	public TaxRateDetail getFeeTaxRate() {
 		return feeTaxRate;
+	}
+	
+	public void setFeeTaxRate(TaxRateDetail feeTaxRate) {
+		this.feeTaxRate = feeTaxRate;
 	}
 
 	@Override

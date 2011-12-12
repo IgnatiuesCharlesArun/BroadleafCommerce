@@ -99,6 +99,8 @@ public interface Order extends Serializable {
     public void setSubmitDate(Date submitDate);
 
 	public TaxDetail getOrderTax();
+	
+	public void setOrderTax(TaxDetail orderTax);
 
     public Money getTotalShipping();
 

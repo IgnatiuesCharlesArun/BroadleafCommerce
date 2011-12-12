@@ -16,7 +16,12 @@
 
 package org.broadleafcommerce.core.pricing.service.workflow;
 
+import org.broadleafcommerce.core.order.domain.FulfillmentGroup;
+import org.broadleafcommerce.core.order.domain.FulfillmentGroupFee;
+import org.broadleafcommerce.core.order.domain.FulfillmentGroupItem;
 import org.broadleafcommerce.core.order.domain.Order;
+import org.broadleafcommerce.core.order.domain.TaxDetail;
+import org.broadleafcommerce.core.order.domain.TaxRateDetail;
 import org.broadleafcommerce.core.pricing.service.module.TaxModule;
 import org.broadleafcommerce.core.workflow.BaseActivity;
 import org.broadleafcommerce.core.workflow.ProcessContext;
@@ -27,6 +32,22 @@ public class TaxActivity extends BaseActivity {
 
     public ProcessContext execute(ProcessContext context) throws Exception {
         Order order = ((PricingContext)context).getSeedData();
+        
+        // Reset all taxes for this order
+		order.setOrderTax(new TaxDetail());
+		for (FulfillmentGroup fg : order.getFulfillmentGroups()) {
+			fg.setShippingTax(new TaxDetail());
+			fg.setFulfillmentGroupTax(new TaxDetail());
+			for (FulfillmentGroupItem fgItem : fg.getFulfillmentGroupItems()) {
+				fgItem.setItemTax(new TaxDetail());
+				fgItem.setItemTaxRate(new TaxRateDetail());
+			}
+			for (FulfillmentGroupFee fgFee : fg.getFulfillmentGroupFees()) {
+				fgFee.setFeeTax(new TaxDetail());
+				fgFee.setFeeTaxRate(new TaxRateDetail());
+			}
+		}
+		
         order = taxModule.calculateTaxForOrder(order);
 
         context.setSeedData(order);

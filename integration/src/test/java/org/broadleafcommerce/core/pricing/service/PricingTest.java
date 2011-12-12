@@ -277,6 +277,7 @@ public class PricingTest extends BaseTest {
         for (OrderItem orderItem : items) {
             FulfillmentGroupItem fgi = new FulfillmentGroupItemImpl();
             fgi.setOrderItem(orderItem);
+            fgi.setQuantity(orderItem.getQuantity());
             fgi.setFulfillmentGroup(group1);
             //fgi.setRetailPrice(new Money(15D));
             group1.addFulfillmentGroupItem(fgi);

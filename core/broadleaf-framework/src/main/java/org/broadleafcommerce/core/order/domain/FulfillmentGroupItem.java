@@ -50,8 +50,12 @@ public interface FulfillmentGroupItem extends Serializable {
     
     TaxDetail getItemTax();
     
+    void setItemTax(TaxDetail itemTax);
+    
 	TaxRateDetail getItemTaxRate();
 	
+    void setItemTaxRate(TaxRateDetail itemTaxRate);
+    
     void removeAssociations();
     
 }

@@ -118,7 +118,7 @@ public class OrderImpl implements Order {
     protected String status;
     
     @Embedded
-    protected TaxDetail orderTax = new TaxDetail();
+    protected TaxDetail orderTax;
 
     @Column(name = "TOTAL_SHIPPING", precision=19, scale=5)
     @AdminPresentation(friendlyName="Order Total Shipping", group="Order", order=10, fieldType=SupportedFieldType.MONEY)
@@ -312,6 +312,10 @@ public class OrderImpl implements Order {
 
 	public TaxDetail getOrderTax() {
 		return orderTax;
+	}
+
+	public void setOrderTax(TaxDetail orderTax) {
+		this.orderTax = orderTax;
 	}
 
 	public Money getTotalShipping() {
