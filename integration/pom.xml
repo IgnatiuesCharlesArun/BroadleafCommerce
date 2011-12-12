@@ -110,8 +110,8 @@
 								</cobertura-merge>
 								<testng classpathref="test.path" outputdir="target/test-reports" haltonfailure="true">
 									<jvmarg value="-Xmx512M" />
-									<jvmarg value="-Xdebug" />
-									<jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8001" />
+<!-- 									<jvmarg value="-Xdebug" /> -->
+<!-- 									<jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8001" /> -->
 									<sysproperty key="net.sourceforge.cobertura.datafile" file="target/instrumented/cobertura.ser" />
 									<xmlfileset dir="src/test/resources" includes="*testng.xml" />
 								</testng>
