@@ -4,36 +4,38 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
 import org.broadleafcommerce.presentation.AdminPresentation;
 
+@Embeddable
 public class TaxRateDetail implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
     @Column(name = "CITY_TAX_RATE", precision=19, scale=5)
-    @AdminPresentation(friendlyName="City Tax Rate", group="Tax", order=4, fieldType=SupportedFieldType.MONEY)
+    @AdminPresentation(friendlyName="City Tax Rate", group="Tax", order=7, fieldType=SupportedFieldType.MONEY)
     protected BigDecimal cityTaxRate;
 
     @Column(name = "COUNTY_TAX_RATE", precision=19, scale=5)
-    @AdminPresentation(friendlyName="County Tax Rate", group="Tax", order=5, fieldType=SupportedFieldType.MONEY)
+    @AdminPresentation(friendlyName="County Tax Rate", group="Tax", order=8, fieldType=SupportedFieldType.MONEY)
     protected BigDecimal countyTaxRate;
 
     @Column(name = "STATE_TAX_RATE", precision=19, scale=5)
-    @AdminPresentation(friendlyName="State Tax Rate", group="Tax", order=6, fieldType=SupportedFieldType.MONEY)
+    @AdminPresentation(friendlyName="State Tax Rate", group="Tax", order=9, fieldType=SupportedFieldType.MONEY)
     protected BigDecimal stateTaxRate;
     
     @Column(name = "DISTRICT_TAX_RATE", precision=19, scale=5)
-    @AdminPresentation(friendlyName="District Tax Rate", group="Tax", order=7, fieldType=SupportedFieldType.MONEY)
+    @AdminPresentation(friendlyName="District Tax Rate", group="Tax", order=10, fieldType=SupportedFieldType.MONEY)
     protected BigDecimal districtTaxRate;
 
     @Column(name = "COUNTRY_TAX_RATE", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Country Tax Rate", group="Tax", order=8, fieldType=SupportedFieldType.MONEY)
+    @AdminPresentation(friendlyName="Country Tax Rate", group="Tax", order=11, fieldType=SupportedFieldType.MONEY)
     protected BigDecimal countryTaxRate;
 
     @Column(name = "TOTAL_TAX_RATE", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Total Tax Rate", group="Tax", order=9, fieldType=SupportedFieldType.MONEY)
+    @AdminPresentation(friendlyName="Total Tax Rate", group="Tax", order=12, fieldType=SupportedFieldType.MONEY)
     protected BigDecimal totalTaxRate;
 
 	public BigDecimal getCityTaxRate() {
