@@ -16,6 +16,28 @@
 
 package org.broadleafcommerce.openadmin.server.dao;
 
+import javax.persistence.EntityManager;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -53,28 +75,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
-
-import javax.persistence.EntityManager;
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * 
@@ -318,6 +318,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
             includeFields,
             excludeFields,
             configurationKey,
+            new ArrayList<Class<?>>(),
             prefix,
             false
         );
@@ -347,6 +348,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
         String[] includeFields,
         String[] excludeFields,
         String configurationKey,
+        List<Class<?>> parentClasses,
         String prefix,
         Boolean isParentExcluded
     ) throws ClassNotFoundException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -383,6 +385,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
             configurationKey,
             ceilingEntityFullyQualifiedClassname,
             mergedProperties,
+            parentClasses,
             prefix,
             isParentExcluded
         );
@@ -689,6 +692,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
         String configurationKey,
         String ceilingEntityFullyQualifiedClassname,
 		Map<String, FieldMetadata> mergedProperties, 
+        List<Class<?>> parentClasses,
 		String prefix,
         Boolean isParentExcluded
 	) throws ClassNotFoundException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -710,6 +714,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
                         excludeFields,
                         configurationKey,
                         ceilingEntityFullyQualifiedClassname,
+                        parentClasses,
                         prefix,
                         isParentExcluded
                     );
@@ -981,6 +986,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 		String[] excludeFields,
         String configurationKey,
         String ceilingEntityFullyQualifiedClassname,
+        List<Class<?>> parentClasses,
 		String prefix,
         Boolean isParentExcluded
 	) throws ClassNotFoundException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -1030,15 +1036,45 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 			excludeFields,
             configurationKey,
             ceilingEntityFullyQualifiedClassname,
+            parentClasses,
 			prefix,
             isParentExcluded
 		);
 		FieldPresentationAttributes presentationAttribute = new FieldPresentationAttributes();
 		presentationAttribute.setExplicitFieldType(SupportedFieldType.STRING);
 		presentationAttribute.setVisibility(VisibilityEnum.HIDDEN_ALL);
-		if (additionalNonPersistentProperties != null) {
+		if (!ArrayUtils.isEmpty(additionalNonPersistentProperties)) {
+            Class<?>[] entities = getAllPolymorphicEntitiesFromCeiling(targetClass);
 			for (String additionalNonPersistentProperty : additionalNonPersistentProperties) {
-				fields.put(additionalNonPersistentProperty, getFieldMetadata(prefix, additionalNonPersistentProperty, propertyList, SupportedFieldType.STRING, null, targetClass, presentationAttribute, mergedPropertyType));
+                if (StringUtils.isEmpty(prefix) || (!StringUtils.isEmpty(prefix) && additionalNonPersistentProperty.startsWith(prefix))) {
+                    String myAdditionalNonPersistentProperty = additionalNonPersistentProperty;
+                    //get final property if this is a dot delimited property
+                    int finalDotPos = additionalNonPersistentProperty.lastIndexOf('.');
+                    if (finalDotPos >= 0) {
+                        myAdditionalNonPersistentProperty = myAdditionalNonPersistentProperty.substring(finalDotPos + 1, myAdditionalNonPersistentProperty.length());
+                    }
+                    //check all the polymorphic types on this target class to see if the end property exists
+                    Field testField = null;
+                    Method testMethod = null;
+                    for (Class<?> clazz : entities) {
+                        try {
+                            testMethod = clazz.getMethod(myAdditionalNonPersistentProperty);
+                            if (testMethod != null) {
+                                break;
+                            }
+                        } catch (NoSuchMethodException e) {
+                            //do nothing - method does not exist
+                        }
+                        testField = getFieldManager().getField(clazz, myAdditionalNonPersistentProperty);
+                        if (testField != null) {
+                            break;
+                        }
+                    }
+                    //if the property exists, add it to the metadata for this class
+                    if (testField != null || testMethod != null) {
+                        fields.put(additionalNonPersistentProperty, getFieldMetadata(prefix, additionalNonPersistentProperty, propertyList, SupportedFieldType.STRING, null, targetClass, presentationAttribute, mergedPropertyType));
+                    }
+                }
 			}
 		}
 		
@@ -1062,6 +1098,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 		String[] excludeFields,
         String configurationKey,
         String ceilingEntityFullyQualifiedClassname,
+        List<Class<?>> parentClasses,
 		String prefix,
         Boolean isParentExcluded
 	) throws HibernateException, ClassNotFoundException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -1079,7 +1116,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 			) {
                 FieldPresentationAttributes presentationAttribute = presentationAttributes.get(propertyName);
                 Boolean amIExcluded = isParentExcluded || !testPropertyInclusion(presentationAttribute);
-				Boolean includeField = testPropertyRecursion(prefix, propertyName, targetClass, ceilingEntityFullyQualifiedClassname);
+				Boolean includeField = testPropertyRecursion(prefix, parentClasses, propertyName, targetClass, ceilingEntityFullyQualifiedClassname);
 
 				SupportedFieldType explicitType = null;
 				if (presentationAttribute != null) {
@@ -1104,6 +1141,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
                             propertyName,
                             type,
                             returnedClass,
+                            parentClasses,
                             amIExcluded
                         );
                         break checkProp;
@@ -1131,6 +1169,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
                             propertyName,
                             returnedClass,
                             targetClass,
+                            parentClasses,
                             prefix,
                             amIExcluded
                         );
@@ -1288,27 +1327,42 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 		//return type not supported - just skip this property
 	}
 
-	protected Boolean testPropertyRecursion(String prefix, String propertyName, Class<?> targetClass, String ceilingEntityFullyQualifiedClassname) throws ClassNotFoundException {
+	protected Boolean testPropertyRecursion(String prefix, List<Class<?>> parentClasses, String propertyName, Class<?> targetClass, String ceilingEntityFullyQualifiedClassname) throws ClassNotFoundException {
         Boolean includeField = true;
-        if (!StringUtils.isEmpty(prefix) && prefix.contains(propertyName + ".")) {
-            int pos = prefix.indexOf(propertyName, 0);
-            String testProperty = prefix.substring(0, pos) + propertyName;
-            Field testField = getFieldManager().getField(targetClass, testProperty);
-            Field myField = getFieldManager().getField(targetClass, prefix + propertyName);
+        if (!StringUtils.isEmpty(prefix)) {
+            Field testField = getFieldManager().getField(targetClass, propertyName);
             if (testField == null) {
                 Class<?>[] entities = getAllPolymorphicEntitiesFromCeiling(Class.forName(ceilingEntityFullyQualifiedClassname));
-                int count = 0;
-                while (count < entities.length) {
-                    testField = getFieldManager().getField(entities[count], testProperty);
+                for (Class<?> clazz : entities) {
+                    testField = getFieldManager().getField(clazz, propertyName);
                     if (testField != null) {
-                        myField = getFieldManager().getField(entities[count], prefix + propertyName);
                         break;
                     }
-                    count++;
+                }
+                String testProperty = prefix + propertyName;
+                if (testField == null) {
+                    testField = getFieldManager().getField(targetClass, testProperty);
+                }
+                if (testField == null) {
+                    for (Class<?> clazz : entities) {
+                        testField = getFieldManager().getField(clazz, testProperty);
+                        if (testField != null) {
+                            break;
+                        }
+                    }
                 }
             }
-            if (testField != null && testField.getType().equals(myField.getType())) {
-                includeField = false;
+            if (testField != null) {
+                Class<?> testType = testField.getType();
+                for (Class<?> parentClass : parentClasses) {
+                    if (parentClass.isAssignableFrom(testType) || testType.isAssignableFrom(parentClass)) {
+                        includeField = false;
+                        break;
+                    }
+                }
+                if (includeField && (targetClass.isAssignableFrom(testType) || testType.isAssignableFrom(targetClass))) {
+                    includeField = false;
+                }
             }
         }
 		return includeField;
@@ -1354,10 +1408,16 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 		String propertyName, 
 		Class<?> returnedClass, 
 		Class<?> targetClass, 
+        List<Class<?>> parentClasses,
 		String prefix,
         Boolean isParentExcluded
 	) throws ClassNotFoundException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		Class<?>[] polymorphicEntities = getAllPolymorphicEntitiesFromCeiling(returnedClass);
+        List<Class<?>> clonedParentClasses = new ArrayList<Class<?>>();
+        for (Class<?> parentClass : parentClasses) {
+            clonedParentClasses.add(parentClass);
+        }
+        clonedParentClasses.add(targetClass);
 		Map<String, FieldMetadata> newFields = getMergedPropertiesRecursively(
             ceilingEntityFullyQualifiedClassname,
             polymorphicEntities,
@@ -1369,6 +1429,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
             includeFields,
             excludeFields,
             configurationKey,
+            clonedParentClasses,
             prefix + propertyName + '.',
             isParentExcluded
         );
@@ -1399,6 +1460,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 		String propertyName, 
 		Type type, 
 		Class<?> returnedClass,
+        List<Class<?>> parentClasses,
         Boolean isParentExcluded
 	) throws MappingException, HibernateException, ClassNotFoundException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		String[] componentProperties = ((ComponentType) type).getPropertyNames();
@@ -1436,6 +1498,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 			excludeFields,
             configurationKey,
             ceilingEntityFullyQualifiedClassname,
+            parentClasses,
 			propertyName + ".",
             isParentExcluded
 		);
