@@ -22,32 +22,40 @@ import org.broadleafcommerce.common.money.Money;
 
 public interface FulfillmentGroupItem extends Serializable {
 
-    Long getId();
+	Long getId();
 
-    void setId(Long id);
+	void setId(Long id);
 
-    FulfillmentGroup getFulfillmentGroup();
+	FulfillmentGroup getFulfillmentGroup();
 
-    void setFulfillmentGroup(FulfillmentGroup fulfillmentGroup);
+	void setFulfillmentGroup(FulfillmentGroup fulfillmentGroup);
 
-    OrderItem getOrderItem();
+	OrderItem getOrderItem();
 
-    void setOrderItem(OrderItem orderItem);
+	void setOrderItem(OrderItem orderItem);
 
-    int getQuantity();
+	int getQuantity();
 
-    void setQuantity(int quantity);
+	void setQuantity(int quantity);
 
-    Money getRetailPrice();
+	Money getRetailPrice();
 
-    Money getSalePrice();
+	Money getSalePrice();
 
-    Money getPrice();
+	Money getPrice();
 
-    String getStatus();
+	String getStatus();
 
-    void setStatus(String status);
-    
-    public void removeAssociations();
-    
+	void setStatus(String status);
+
+	void removeAssociations();
+
+	TaxDetail getItemTax();
+
+	void setItemTax(TaxDetail itemTax);
+
+	TaxRateDetail getItemTaxRate();
+
+	void setItemTaxRate(TaxRateDetail itemTaxRate);
+
 }

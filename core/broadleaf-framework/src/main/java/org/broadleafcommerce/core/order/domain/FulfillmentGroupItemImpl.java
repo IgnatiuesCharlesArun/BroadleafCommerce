@@ -18,6 +18,7 @@ package org.broadleafcommerce.core.order.domain;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -65,6 +66,12 @@ public class FulfillmentGroupItemImpl implements FulfillmentGroupItem {
     @Column(name = "STATUS")
     @Index(name="FGITEM_STATUS_INDEX", columnNames={"STATUS"})
     private String status;
+    
+	@Embedded
+	protected TaxDetail itemTax;
+
+	@Embedded
+	protected TaxRateDetail itemTaxRate;
 
     public Long getId() {
         return id;
@@ -118,6 +125,22 @@ public class FulfillmentGroupItemImpl implements FulfillmentGroupItem {
         this.status = status;
     }
     
+	public TaxDetail getItemTax() {
+		return itemTax;
+	}
+
+	public void setItemTax(TaxDetail itemTax) {
+		this.itemTax = itemTax;
+	}
+
+	public TaxRateDetail getItemTaxRate() {
+		return itemTaxRate;
+	}
+
+	public void setItemTaxRate(TaxRateDetail itemTaxRate) {
+		this.itemTaxRate = itemTaxRate;
+	}
+
     public void removeAssociations() {
 		if (getFulfillmentGroup() != null) getFulfillmentGroup().getFulfillmentGroupItems().remove(this);
 		setFulfillmentGroup(null);

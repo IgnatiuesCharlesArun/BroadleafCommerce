@@ -63,7 +63,7 @@ public class GoogleAnalyticsTag extends SimpleTagSupport {
             Address paymentAddress = order.getPaymentInfos().get(0).getAddress();
 
             sb.append("pageTracker._addTrans(" + order.getId() + "," + order.getName() + "," +
-                    order.getTotal() + "," + order.getTotalTax() + "," + order.getTotalShipping() + "," +
+                    order.getTotal() + "," + order.getOrderTax().getTotalTax() + "," + order.getTotalShipping() + "," +
                     paymentAddress.getCity() + "," + paymentAddress.getState().getName() + "," +
                     paymentAddress.getCountry().getName() + ");" );
 

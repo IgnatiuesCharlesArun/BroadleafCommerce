@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -65,6 +66,11 @@ public class FulfillmentGroupFeeImpl implements FulfillmentGroupFee {
 
     @Column(name = "IS_TAXABLE")
     private Boolean isTaxable = Boolean.FALSE;
+    
+    protected TaxDetail feeTax;
+    
+    @Embedded
+    protected TaxRateDetail feeTaxRate;
 
     public Long getId() {
         return id;
@@ -112,6 +118,22 @@ public class FulfillmentGroupFeeImpl implements FulfillmentGroupFee {
 
     public void setReportingCode(String reportingCode) {
         this.reportingCode = reportingCode;
+    }
+    
+    public TaxDetail getFeeTax() {
+    	return feeTax;
+    }
+    
+    public void setFeeTax(TaxDetail feeTax) {
+    	this.feeTax = feeTax;
+    }
+     
+    public TaxRateDetail getFeeTaxRate() {
+    	return feeTaxRate;
+    }
+     
+    public void setFeeTaxRate(TaxRateDetail feeTaxRate) {
+    	this.feeTaxRate = feeTaxRate;
     }
 
     @Override

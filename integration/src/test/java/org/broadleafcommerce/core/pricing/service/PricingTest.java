@@ -23,6 +23,8 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.broadleafcommerce.common.money.Money;
+import org.broadleafcommerce.common.time.SystemTime;
 import org.broadleafcommerce.core.catalog.domain.Sku;
 import org.broadleafcommerce.core.catalog.domain.SkuImpl;
 import org.broadleafcommerce.core.catalog.service.CatalogService;
@@ -47,8 +49,6 @@ import org.broadleafcommerce.core.order.service.OrderItemService;
 import org.broadleafcommerce.core.pricing.ShippingRateDataProvider;
 import org.broadleafcommerce.core.pricing.domain.ShippingRate;
 import org.broadleafcommerce.core.pricing.service.workflow.type.ShippingServiceType;
-import org.broadleafcommerce.common.money.Money;
-import org.broadleafcommerce.common.time.SystemTime;
 import org.broadleafcommerce.profile.core.domain.Address;
 import org.broadleafcommerce.profile.core.domain.AddressImpl;
 import org.broadleafcommerce.profile.core.domain.Country;
@@ -193,8 +193,8 @@ public class PricingTest extends BaseTest {
 
         assert order.getSubTotal().subtract(order.getOrderAdjustmentsValue()).equals(new Money(31.80D));
         assert (order.getTotal().greaterThan(order.getSubTotal()));
-        assert (order.getTotalTax().equals(order.getSubTotal().multiply(0.05D).add(group.getShippingPrice().multiply(0.05D))));
-        assert (order.getTotal().equals(order.getSubTotal().add(order.getTotalTax()).add(order.getTotalShipping()).subtract(order.getOrderAdjustmentsValue())));
+        assert (order.getOrderTax().getTotalTax().equals(order.getSubTotal().multiply(0.05D).add(group.getShippingPrice().multiply(0.05D))));
+        assert (order.getTotal().equals(order.getSubTotal().add(order.getOrderTax().getTotalTax()).add(order.getTotalShipping()).subtract(order.getOrderAdjustmentsValue())));
     }
 
     @Test(groups = { "testShipping" }, dependsOnGroups = { "testShippingInsert", "createCustomerIdGeneration"})
@@ -277,6 +277,7 @@ public class PricingTest extends BaseTest {
         for (OrderItem orderItem : items) {
             FulfillmentGroupItem fgi = new FulfillmentGroupItemImpl();
             fgi.setOrderItem(orderItem);
+            fgi.setQuantity(orderItem.getQuantity());
             fgi.setFulfillmentGroup(group1);
             //fgi.setRetailPrice(new Money(15D));
             group1.addFulfillmentGroupItem(fgi);
@@ -286,8 +287,8 @@ public class PricingTest extends BaseTest {
         cartService.save(order, true);
 
         assert (order.getTotal().greaterThan(order.getSubTotal()));
-        assert (order.getTotalTax().equals(order.getSubTotal().multiply(0.05D).add(group1.getShippingPrice().multiply(0.05D))));
-        assert (order.getTotal().equals(order.getSubTotal().add(order.getTotalTax().add(order.getTotalShipping()))));
+        assert (order.getOrderTax().getTotalTax().equals(order.getSubTotal().multiply(0.05D).add(group1.getShippingPrice().multiply(0.05D))));
+        assert (order.getTotal().equals(order.getSubTotal().add(order.getOrderTax().getTotalTax().add(order.getTotalShipping()))));
     }
     
     @Test(groups = { "createCustomerIdGeneration" })

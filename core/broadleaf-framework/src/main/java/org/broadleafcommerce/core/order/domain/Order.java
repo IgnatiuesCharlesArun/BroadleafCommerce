@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.broadleafcommerce.common.audit.Auditable;
+import org.broadleafcommerce.common.money.Money;
 import org.broadleafcommerce.core.offer.domain.CandidateOrderOffer;
 import org.broadleafcommerce.core.offer.domain.Offer;
 import org.broadleafcommerce.core.offer.domain.OfferCode;
@@ -29,7 +30,6 @@ import org.broadleafcommerce.core.offer.domain.OfferInfo;
 import org.broadleafcommerce.core.offer.domain.OrderAdjustment;
 import org.broadleafcommerce.core.order.service.type.OrderStatus;
 import org.broadleafcommerce.core.payment.domain.PaymentInfo;
-import org.broadleafcommerce.common.money.Money;
 import org.broadleafcommerce.profile.core.domain.Customer;
 
 public interface Order extends Serializable {
@@ -97,30 +97,10 @@ public interface Order extends Serializable {
     public Date getSubmitDate();
 
     public void setSubmitDate(Date submitDate);
-
-    public Money getCityTax();
-
-    public void setCityTax(Money cityTax);
-
-    public Money getCountyTax();
-
-    public void setCountyTax(Money countyTax);
-
-    public Money getStateTax();
-
-    public void setStateTax(Money stateTax);
     
-    public Money getDistrictTax();
-
-    public void setDistrictTax(Money districtTax);
-
-    public Money getCountryTax();
-
-    public void setCountryTax(Money countryTax);
-
-    public Money getTotalTax();
-
-    public void setTotalTax(Money totalTax);
+    public TaxDetail getOrderTax();
+    
+  	public void setOrderTax(TaxDetail orderTax);
 
     public Money getTotalShipping();
 
