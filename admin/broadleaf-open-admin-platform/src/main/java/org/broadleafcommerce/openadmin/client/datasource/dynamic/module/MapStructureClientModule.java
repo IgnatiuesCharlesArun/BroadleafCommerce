@@ -16,7 +16,6 @@
 
 package org.broadleafcommerce.openadmin.client.datasource.dynamic.module;
 
-import com.anasoft.os.daofusion.cto.client.CriteriaTransferObject;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.gwtincubator.security.exception.ApplicationSecurityException;
@@ -31,10 +30,12 @@ import com.smartgwt.client.widgets.Canvas;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.tree.TreeNode;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
 import org.broadleafcommerce.openadmin.client.BLCMain;
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.operation.EntityOperationType;
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.operation.EntityServiceAsyncCallback;
 import org.broadleafcommerce.openadmin.client.dto.ClassMetadata;
+import org.broadleafcommerce.openadmin.client.dto.CriteriaTransferObject;
 import org.broadleafcommerce.openadmin.client.dto.DynamicResultSet;
 import org.broadleafcommerce.openadmin.client.dto.Entity;
 import org.broadleafcommerce.openadmin.client.dto.MapStructure;
@@ -44,7 +45,6 @@ import org.broadleafcommerce.openadmin.client.dto.PersistencePackage;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePerspective;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePerspectiveItemType;
 import org.broadleafcommerce.openadmin.client.dto.Property;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
 import org.broadleafcommerce.openadmin.client.service.AbstractCallback;
 import org.broadleafcommerce.openadmin.client.service.AppServices;
 import org.broadleafcommerce.openadmin.client.service.DynamicEntityServiceAsync;
@@ -58,6 +58,11 @@ public class MapStructureClientModule extends BasicClientEntityModule {
 
 	protected ListGrid associatedGrid;
 	
+    public MapStructureClientModule(String ceilingEntityFullyQualifiedClassname, String fetchTypeFullyQualifiedClassname, PersistencePerspective persistencePerspective, DynamicEntityServiceAsync service, ListGrid associatedGrid) {
+        super(ceilingEntityFullyQualifiedClassname, fetchTypeFullyQualifiedClassname, persistencePerspective, service);
+        this.associatedGrid = associatedGrid;
+    }
+    
 	public MapStructureClientModule(String ceilingEntityFullyQualifiedClassname, PersistencePerspective persistencePerspective, DynamicEntityServiceAsync service, ListGrid associatedGrid) {
 		super(ceilingEntityFullyQualifiedClassname, persistencePerspective, service);
 		this.associatedGrid = associatedGrid;
@@ -67,7 +72,7 @@ public class MapStructureClientModule extends BasicClientEntityModule {
 	public void executeFetch(final String requestId, final DSRequest request, final DSResponse response, final String[] customCriteria, final AsyncCallback<DataSource> cb) {
 		CriteriaTransferObject criteriaTransferObject = getCto(request);
 		final String parentCategoryId = criteriaTransferObject.get(criteriaTransferObject.getPropertyIdSet().iterator().next()).getFilterValues()[0];
-		service.fetch(new PersistencePackage(ceilingEntityFullyQualifiedClassname, null, persistencePerspective, customCriteria, BLCMain.csrfToken), criteriaTransferObject, new EntityServiceAsyncCallback<DynamicResultSet>(EntityOperationType.FETCH, requestId, request, response, dataSource) {
+		service.fetch(new PersistencePackage(ceilingEntityFullyQualifiedClassname, fetchTypeFullyQualifiedClassname, null, persistencePerspective, customCriteria, BLCMain.csrfToken), criteriaTransferObject, new EntityServiceAsyncCallback<DynamicResultSet>(EntityOperationType.FETCH, requestId, request, response, dataSource) {
 			public void onSuccess(DynamicResultSet result) {
 				super.onSuccess(result);
 				TreeNode[] recordList = buildRecords(result, null);

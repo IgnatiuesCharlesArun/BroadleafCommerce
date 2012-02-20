@@ -16,9 +16,9 @@
 
 package org.broadleafcommerce.cms.page.domain;
 
-import java.io.Serializable;
-
 import org.broadleafcommerce.openadmin.audit.AdminAuditable;
+
+import java.io.Serializable;
 
 /**
  * Created by bpolster.
@@ -46,4 +46,5 @@ public interface PageField extends Serializable {
     public AdminAuditable getAuditable();
 
     public void setAuditable(AdminAuditable auditable);
+
 }

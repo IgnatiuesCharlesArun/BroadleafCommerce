@@ -16,13 +16,24 @@
 
 package org.broadleafcommerce.cms.structure.service;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.broadleafcommerce.cms.common.AbstractContentService;
+import org.broadleafcommerce.cms.file.service.StaticAssetService;
 import org.broadleafcommerce.cms.structure.dao.StructuredContentDao;
 import org.broadleafcommerce.cms.structure.domain.StructuredContent;
 import org.broadleafcommerce.cms.structure.domain.StructuredContentField;
+import org.broadleafcommerce.cms.structure.domain.StructuredContentImpl;
+import org.broadleafcommerce.cms.structure.domain.StructuredContentItemCriteria;
+import org.broadleafcommerce.cms.structure.domain.StructuredContentRule;
 import org.broadleafcommerce.cms.structure.domain.StructuredContentType;
+import org.broadleafcommerce.cms.structure.dto.ItemCriteriaDTO;
+import org.broadleafcommerce.cms.structure.dto.StructuredContentDTO;
+import org.broadleafcommerce.cms.structure.message.ArchivedStructuredContentPublisher;
 import org.broadleafcommerce.common.locale.domain.Locale;
 import org.broadleafcommerce.openadmin.server.dao.SandBoxDao;
 import org.broadleafcommerce.openadmin.server.dao.SandBoxItemDao;
@@ -33,8 +44,11 @@ import org.broadleafcommerce.openadmin.server.domain.SandBoxOperationType;
 import org.broadleafcommerce.openadmin.server.domain.SandBoxType;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -49,8 +63,10 @@ import java.util.Map;
  * @author bpolster
  */
 @Service("blStructuredContentService")
-public class StructuredContentServiceImpl implements StructuredContentService {
+public class StructuredContentServiceImpl extends AbstractContentService implements StructuredContentService {
     private static final Log LOG = LogFactory.getLog(StructuredContentServiceImpl.class);
+
+    private static String AND = " && ";
 
     @Resource(name="blStructuredContentDao")
     protected StructuredContentDao structuredContentDao;
@@ -59,9 +75,16 @@ public class StructuredContentServiceImpl implements StructuredContentService {
     protected SandBoxItemDao sandBoxItemDao;
 
     @Resource(name="blSandBoxDao")
-    protected SandBoxDao sandBoxDao;
+    protected SandBoxDao sandBoxDao; 
+    
+    @Resource(name="blStaticAssetService")
+    protected StaticAssetService staticAssetService;
 
     private List<StructuredContentRuleProcessor> contentRuleProcessors;
+
+    protected Cache structuredContentCache;
+
+    protected List<ArchivedStructuredContentPublisher> archivedStructuredContentListeners;
 
     @Override
     public StructuredContent findStructuredContentById(Long contentId) {
@@ -91,92 +114,12 @@ public class StructuredContentServiceImpl implements StructuredContentService {
 
     @Override
     public List<StructuredContent> findContentItems(SandBox sandbox, Criteria c) {
-        c.add(Restrictions.eq("archivedFlag", false));
-
-        if (sandbox == null) {
-            // Query is hitting the production sandbox.
-            c.add(Restrictions.isNull("sandbox"));
-            return c.list();
-        } else {
-            Criterion originalSandboxExpression = Restrictions.eq("originalSandBox", sandbox);
-            Criterion currentSandboxExpression = Restrictions.eq("sandbox", sandbox);
-            Criterion productionSandboxExpression = null;
-            if (sandbox.getSite() == null || sandbox.getSite().getProductionSandbox() == null) {
-                productionSandboxExpression = Restrictions.isNull("sandbox");
-            } else {
-                if (!SandBoxType.PRODUCTION.equals(sandbox.getSandBoxType())) {
-                    productionSandboxExpression = Restrictions.eq("sandbox", sandbox.getSite().getProductionSandbox());
-                }
-            }
-
-            if (productionSandboxExpression != null) {
-                c.add(Restrictions.or(Restrictions.or(currentSandboxExpression,productionSandboxExpression), originalSandboxExpression));
-            } else {
-                c.add(Restrictions.or(currentSandboxExpression, originalSandboxExpression));
-            }
-
-            List<StructuredContent> resultList = (List<StructuredContent>) c.list();
-
-            // Iterate once to build the map
-            LinkedHashMap returnItems = new LinkedHashMap<Long,StructuredContent>();
-            for (StructuredContent content : resultList) {
-                returnItems.put(content.getId(), content);
-            }
-
-            // Iterate to remove items from the final list
-            for (StructuredContent content : resultList) {
-                if (content.getOriginalItemId() != null) {
-                    returnItems.remove(content.getOriginalItemId());
-                }
-
-                if (content.getDeletedFlag()) {
-                    returnItems.remove(content.getId());
-                }
-            }
-            return new ArrayList<StructuredContent>(returnItems.values());
-        }
-
+        return (List<StructuredContent>) findItems(sandbox, c, StructuredContent.class, StructuredContentImpl.class, "originalItemId");
     }
 
     @Override
     public Long countContentItems(SandBox sandbox, Criteria c) {
-        c.add(Restrictions.eq("archivedFlag", false));
-        c.setProjection(Projections.rowCount());
-
-        if (sandbox == null) {
-            // Query is hitting the production sandbox.
-            c.add(Restrictions.isNull("sandbox"));
-            return (Long) c.uniqueResult();
-        } else {
-            Criterion originalSandboxExpression = Restrictions.eq("originalSandBox", sandbox);
-            Criterion currentSandboxExpression = Restrictions.eq("sandbox", sandbox);
-            Criterion productionSandboxExpression;
-            if (sandbox.getSite() == null || sandbox.getSite().getProductionSandbox() == null) {
-                productionSandboxExpression = Restrictions.isNull("sandbox");
-            } else {
-                // Query is hitting the production sandbox.
-                if (sandbox.getId().equals(sandbox.getSite().getProductionSandbox().getId())) {
-                    return (Long) c.uniqueResult();
-                }
-                productionSandboxExpression = Restrictions.eq("sandbox", sandbox.getSite().getProductionSandbox());
-            }
-
-            c.add(Restrictions.or(Restrictions.or(currentSandboxExpression,productionSandboxExpression), originalSandboxExpression));
-
-            Long resultCount = (Long) c.list().get(0);
-            Long updatedCount = 0L;
-            Long deletedCount = 0L;
-
-            // count updated items
-            c.add(Restrictions.and(Restrictions.isNotNull("originalItemId"),Restrictions.or(currentSandboxExpression,originalSandboxExpression)));
-            updatedCount = (Long) c.list().get(0);
-
-            // count deleted items
-            c.add(Restrictions.and(Restrictions.eq("deletedFlag", true),Restrictions.or(currentSandboxExpression,originalSandboxExpression)));
-            deletedCount = (Long) c.list().get(0);
-
-            return resultCount - updatedCount - deletedCount;
-        }
+       return countItems(sandbox, c, StructuredContentImpl.class, "originalItemId");
     }
 
     @Override
@@ -275,16 +218,122 @@ public class StructuredContentServiceImpl implements StructuredContentService {
         content.setDeletedFlag(true);
         updateStructuredContent(content, destinationSandbox);
     }
+    
+    private String buildRuleExpression(StructuredContent sc) {
+       StringBuffer ruleExpression = null;
+       Map<String, StructuredContentRule> ruleMap = sc.getStructuredContentMatchRules();
+       if (ruleMap != null) {
+           for (String ruleKey : ruleMap.keySet()) {
+               if (ruleExpression == null) {
+                   ruleExpression = new StringBuffer(ruleMap.get(ruleKey).getMatchRule());
+               } else {
+                   ruleExpression.append(AND);
+                   ruleExpression.append(ruleMap.get(ruleKey).getMatchRule());
+               }
+           }
+       }
+       if (ruleExpression != null) {
+           return ruleExpression.toString();
+       } else {
+           return null;
+       }
+    }
+    
+    private List<ItemCriteriaDTO> buildItemCriteriaDTOList(StructuredContent sc) {
+        List<ItemCriteriaDTO> itemCriteriaDTOList = new ArrayList<ItemCriteriaDTO>();
+        for(StructuredContentItemCriteria criteria : sc.getQualifyingItemCriteria()) {
+            ItemCriteriaDTO criteriaDTO = new ItemCriteriaDTO();
+            criteriaDTO.setMatchRule(criteria.getOrderItemMatchRule());
+            criteriaDTO.setQty(criteria.getQuantity());
+            itemCriteriaDTOList.add(criteriaDTO);
+        }
+        return itemCriteriaDTOList;
+    }            
+    
+    private void buildFieldValues(StructuredContent sc, StructuredContentDTO scDTO, boolean secure) {
+        String envPrefix = staticAssetService.getStaticAssetEnvironmentUrlPrefix();
+        if (envPrefix != null && secure) {
+            envPrefix = staticAssetService.getStaticAssetEnvironmentSecureUrlPrefix();
+        }
+        String cmsPrefix = staticAssetService.getStaticAssetUrlPrefix();
+
+        for (String fieldKey : sc.getStructuredContentFields().keySet()) {
+            StructuredContentField scf = sc.getStructuredContentFields().get(fieldKey);
+            String originalValue = scf.getValue();
+            if (envPrefix != null && originalValue != null && originalValue.contains(cmsPrefix)) {
+                if (originalValue.startsWith("/")) {
+                    originalValue = originalValue.substring(1);
+                }
+                String fldValue = originalValue.replaceAll(cmsPrefix, envPrefix+cmsPrefix);
+                scDTO.getValues().put(fieldKey, fldValue);
+            } else {
+                scDTO.getValues().put(fieldKey, originalValue);
+            }
+        }
+    }
+
+    /**
+     * Converts a list of structured content items to a list of structured content DTOs.<br>
+     * Internally calls buildStructuredContentDTO(...).
+     *
+     * @param structuredContentList
+     * @param secure
+     * @return
+     */
+    protected List<StructuredContentDTO> buildStructuredContentDTOList(List<StructuredContent> structuredContentList, boolean secure) {
+        List<StructuredContentDTO> dtoList = new ArrayList<StructuredContentDTO>();
+        if (structuredContentList != null) {
+            for(StructuredContent sc : structuredContentList) {
+                dtoList.add(buildStructuredContentDTO(sc, secure));
+            }
+        }
+        return dtoList;
+    }
 
 
-    private List<StructuredContent> mergeContent(List<StructuredContent> productionList, List<StructuredContent> sandboxList) {
+    /**
+     * Converts a StructuredContent into a StructuredContentDTO.   If the item contains fields with
+     * broadleaf cms urls, the urls are converted to utilize the domain
+     * @param sc
+     * @param secure
+     * @return
+     */
+    protected StructuredContentDTO buildStructuredContentDTO(StructuredContent sc, boolean secure) {
+        StructuredContentDTO scDTO = new StructuredContentDTO();
+        scDTO.setContentName(sc.getContentName());
+        scDTO.setContentType(sc.getStructuredContentType().getName());
+        scDTO.setId(sc.getId());
+        scDTO.setPriority(sc.getPriority());
+        
+        if (sc.getLocale() != null) {
+            scDTO.setLocaleCode(sc.getLocale().getLocaleCode());
+        }
+        
+        if (sc.getSandbox() != null) {
+            scDTO.setSandboxId(sc.getSandbox().getId());
+        }
+
+        scDTO.setRuleExpression(buildRuleExpression(sc));
+        buildFieldValues(sc, scDTO, secure);
+        
+        if (sc.getQualifyingItemCriteria() != null && sc.getQualifyingItemCriteria().size() > 0) {
+            scDTO.setItemCriteriaDTOList(buildItemCriteriaDTOList(sc));
+        }
+        return scDTO;
+        
+    }
+
+
+    private List<StructuredContentDTO> mergeContent(List<StructuredContentDTO> productionList, List<StructuredContent> sandboxList, boolean secure) {
         if (sandboxList == null || sandboxList.size() == 0) {
             return productionList;
         }
 
-        Map<Long,StructuredContent> scMap = new LinkedHashMap<Long,StructuredContent>();
-        for(StructuredContent sc : productionList) {
-            scMap.put(sc.getId(), sc);
+        Map<Long,StructuredContentDTO> scMap = new LinkedHashMap<Long,StructuredContentDTO>();
+        if (productionList != null) {
+            for(StructuredContentDTO sc : productionList) {
+                scMap.put(sc.getId(), sc);
+            }
         }
 
         for(StructuredContent sc : sandboxList) {
@@ -293,11 +342,12 @@ public class StructuredContentServiceImpl implements StructuredContentService {
             }
 
             if (! sc.getDeletedFlag() && ! sc.getOfflineFlag()) {
-                scMap.put(sc.getId(), sc);
+                StructuredContentDTO convertedItem = buildStructuredContentDTO(sc, secure);
+                scMap.put(sc.getId(), convertedItem);
             }
         }
 
-        ArrayList<StructuredContent> returnList = new ArrayList<StructuredContent>(scMap.values());
+        ArrayList<StructuredContentDTO> returnList = new ArrayList<StructuredContentDTO>(scMap.values());
 
         if (returnList.size()  > 1) {
             Collections.sort(returnList, new BeanComparator("priority"));
@@ -306,14 +356,22 @@ public class StructuredContentServiceImpl implements StructuredContentService {
         return returnList;
     }
 
-    private List<StructuredContent> evaluateAndPriortizeContent(List<StructuredContent> structuredContentList, int count, Map<String, Object> ruleDTOs) {
+    private List<StructuredContentDTO> evaluateAndPriortizeContent(List<StructuredContentDTO> structuredContentList, int count, Map<String, Object> ruleDTOs) {
+        // some optimization for single item lists which don't require prioritization
+        if (structuredContentList.size() == 1) {
+            if (processContentRules(structuredContentList.get(0), ruleDTOs)) {
+                return structuredContentList;
+            } else {
+                return new ArrayList<StructuredContentDTO>();
+            }
+        }
 
-        Iterator<StructuredContent> structuredContentIterator = structuredContentList.iterator();
-        List<StructuredContent> returnList = new ArrayList<StructuredContent>();
-        List<StructuredContent> tmpList = new ArrayList<StructuredContent>();
+        Iterator<StructuredContentDTO> structuredContentIterator = structuredContentList.iterator();
+        List<StructuredContentDTO> returnList = new ArrayList<StructuredContentDTO>();
+        List<StructuredContentDTO> tmpList = new ArrayList<StructuredContentDTO>();
         Integer lastPriority = Integer.MIN_VALUE;
         while (structuredContentIterator.hasNext()) {
-            StructuredContent sc = structuredContentIterator.next();
+            StructuredContentDTO sc = structuredContentIterator.next();
             if (! lastPriority.equals(sc.getPriority())) {
                 // If we've moved to another priority, then shuffle all of the items
                 // with the previous priority and add them to the return list.
@@ -356,7 +414,7 @@ public class StructuredContentServiceImpl implements StructuredContentService {
         return returnList;
     }
 
-    private boolean processContentRules(StructuredContent sc, Map<String, Object> ruleDTOs) {
+    private boolean processContentRules(StructuredContentDTO sc, Map<String, Object> ruleDTOs) {
         if (contentRuleProcessors != null) {
             for (StructuredContentRuleProcessor processor : contentRuleProcessors) {
                 boolean matchFound = processor.checkForMatch(sc, ruleDTOs);
@@ -369,28 +427,55 @@ public class StructuredContentServiceImpl implements StructuredContentService {
     }
 
     @Override
-    public List<StructuredContent> lookupStructuredContentItemsByType(SandBox sandBox, StructuredContentType contentType, Locale locale, Integer count, Map<String, Object> ruleDTOs) {
-        List<StructuredContent> productionContentList = null;
+    public List<StructuredContentDTO> lookupStructuredContentItemsByType(SandBox sandBox, StructuredContentType contentType, Locale locale, Integer count, Map<String, Object> ruleDTOs, boolean secure) {
+        
         List<StructuredContent> sandBoxContentList = null;
-        productionContentList = structuredContentDao.findActiveStructuredContentByType(getProductionSandBox(sandBox), contentType, locale);
+        
+        String cacheKey = buildTypeKey(getProductionSandBox(sandBox), locale, contentType.getName()); 
+        cacheKey = cacheKey+"-"+secure;
+        List<StructuredContentDTO> productionContentDTOList = getStructuredContentListFromCache(cacheKey);
+        if (productionContentDTOList == null) {
+            List<StructuredContent> productionContentList = structuredContentDao.findActiveStructuredContentByType(getProductionSandBox(sandBox), contentType, locale);
+            productionContentDTOList = buildStructuredContentDTOList(productionContentList, secure);
+            if (productionContentDTOList != null) {
+                addStructuredContentListToCache(cacheKey, productionContentDTOList);
+            }
+        }
+        
+        final List<StructuredContentDTO> contentList;
         if (! isProductionSandBox(sandBox)) {
             sandBoxContentList = structuredContentDao.findActiveStructuredContentByType(sandBox, contentType, locale);
+            contentList = mergeContent(productionContentDTOList, sandBoxContentList, secure);
+        } else {
+            contentList = productionContentDTOList;
         }
 
-        List<StructuredContent> contentList = mergeContent(productionContentList, sandBoxContentList);
         return evaluateAndPriortizeContent(contentList, count, ruleDTOs);
     }
 
     @Override
-    public List<StructuredContent> lookupStructuredContentItemsByName(SandBox sandBox, StructuredContentType contentType, String contentName, org.broadleafcommerce.common.locale.domain.Locale locale, Integer count, Map<String, Object> ruleDTOs) {
-        List<StructuredContent> productionContentList = null;
+    public List<StructuredContentDTO> lookupStructuredContentItemsByName(SandBox sandBox, StructuredContentType contentType, String contentName, org.broadleafcommerce.common.locale.domain.Locale locale, Integer count, Map<String, Object> ruleDTOs, boolean secure) {
         List<StructuredContent> sandBoxContentList = null;
-        productionContentList = structuredContentDao.findActiveStructuredContentByNameAndType(getProductionSandBox(sandBox), contentType, contentName, locale);
-        if (! isProductionSandBox(sandBox)) {
-            sandBoxContentList = structuredContentDao.findActiveStructuredContentByNameAndType(sandBox, contentType, contentName, locale);
+        
+        String cacheKey = buildNameKey(getProductionSandBox(sandBox), locale, contentType.getName(), contentName); 
+        cacheKey = cacheKey+"-"+secure;
+        List<StructuredContentDTO> productionContentDTOList = getStructuredContentListFromCache(cacheKey);
+        if (productionContentDTOList == null) {                
+            List<StructuredContent> productionContentList = structuredContentDao.findActiveStructuredContentByNameAndType(getProductionSandBox(sandBox), contentType, contentName, locale);
+            productionContentDTOList = buildStructuredContentDTOList(productionContentList, secure);
+            if (productionContentDTOList != null) {
+                addStructuredContentListToCache(cacheKey, productionContentDTOList);
+            }
         }
 
-        List<StructuredContent> contentList = mergeContent(productionContentList, sandBoxContentList);
+        final List<StructuredContentDTO> contentList;
+        if (! isProductionSandBox(sandBox)) {
+            sandBoxContentList = structuredContentDao.findActiveStructuredContentByNameAndType(sandBox, contentType, contentName, locale);
+            contentList = mergeContent(productionContentDTOList, sandBoxContentList, secure);
+        } else {
+            contentList = productionContentDTOList;
+        }
+
         return evaluateAndPriortizeContent(contentList, count, ruleDTOs);
     }
 
@@ -409,6 +494,17 @@ public class StructuredContentServiceImpl implements StructuredContentService {
             return true;
         } else {
             return SandBoxType.PRODUCTION.equals(dest.getSandBoxType());
+        }
+    }
+
+    protected void productionItemArchived(StructuredContent sc) {
+        // Immediately remove the content from this VM.
+        removeStructuredContentFromCache(sc);
+
+        if (archivedStructuredContentListeners != null) {
+            for (ArchivedStructuredContentPublisher listener : archivedStructuredContentListeners) {                
+                listener.processStructuredContentArchive(sc, buildTypeKey(sc), buildNameKey(sc));
+            }
         }
     }
 
@@ -434,16 +530,17 @@ public class StructuredContentServiceImpl implements StructuredContentService {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Structured content promoted to production.  " + sc.getId() + ".  Archiving original item " + sc.getOriginalItemId());
                 }
-                StructuredContent originalSC = structuredContentDao.findStructuredContentById(sandBoxItem.getOriginalItemId());
+                StructuredContent originalSC = structuredContentDao.findStructuredContentById(sc.getOriginalItemId());
                 originalSC.setArchivedFlag(Boolean.TRUE);
                 structuredContentDao.addOrUpdateContentItem(originalSC);
+                productionItemArchived(originalSC);
 
                 if (sc.getDeletedFlag()) {
-                    // if this deleted page is being pushed to production, set it as archived.
+                    // if this deleted content is being pushed to production, set it as archived.
                     sc.setArchivedFlag(true);
                 }
 
-                // We are archiving the old page and making this the new "production page", so
+                // We are archiving the old content and making this the new "production page content", so
                 // null out the original page id before saving.
                 sc.setOriginalItemId(null);
             }
@@ -496,5 +593,94 @@ public class StructuredContentServiceImpl implements StructuredContentService {
 
     public void setContentRuleProcessors(List<StructuredContentRuleProcessor> contentRuleProcessors) {
         this.contentRuleProcessors = contentRuleProcessors;
+    }
+
+    private Cache getStructuredContentCache() {
+        if (structuredContentCache == null) {
+            structuredContentCache = CacheManager.getInstance().getCache("cmsStructuredContentCache");
+        }
+        return structuredContentCache;
+    }
+    
+    private String buildNameKey(StructuredContent sc) {
+        return buildNameKey(sc.getSandbox(), sc.getLocale(), sc.getStructuredContentType().getName(), sc.getContentName());    
+    }
+
+    private String buildTypeKey(StructuredContent sc) {
+        return buildTypeKey(sc.getSandbox(), sc.getLocale(), sc.getStructuredContentType().getName());
+    }
+
+
+    private String buildNameKey(SandBox currentSandbox, Locale locale, String contentType, String contentName) {
+        StringBuffer key = new StringBuffer(contentType).append("-").append(contentName);
+        if (locale != null) {
+            key.append("-").append(locale.getLocaleCode());
+        }
+
+        if (currentSandbox != null) {
+            key.append("-").append(currentSandbox.getId());
+        }
+
+        return key.toString();
+    }
+    
+    private String buildTypeKey(SandBox currentSandbox, Locale locale, String contentType) {
+        StringBuffer key = new StringBuffer(contentType);
+        if (locale != null) {
+            key.append("-").append(locale.getLocaleCode());
+        }
+
+        if (currentSandbox != null) {
+            key.append("-").append(currentSandbox.getId());
+        }
+
+        return key.toString();
+    }
+
+
+    private void addStructuredContentListToCache(String key, List<StructuredContentDTO> scDTOList) {
+        getStructuredContentCache().put(new Element(key, scDTOList));
+    }
+
+    private List<StructuredContentDTO> getStructuredContentListFromCache(String key) {
+        Element scElement =  getStructuredContentCache().get(key);
+        if (scElement != null) {
+            return (List<StructuredContentDTO>) scElement.getValue();
+        }
+        return null;
+    }
+
+    /**
+     * Call to evict an item from the cache.
+     * @param sc
+     */
+    public void removeStructuredContentFromCache(StructuredContent sc) {
+        // Remove secure and non-secure instances of the page.
+        // Typically the page will be in one or the other if at all.
+        removeItemFromCache(buildNameKey(sc), buildTypeKey(sc));
+    }
+
+    /**
+     * Call to evict both secure and non-secure SC items matching
+     * the passed in key.
+     *
+     * @param nameKey
+     */
+    public void removeItemFromCache(String nameKey, String typeKey) {
+        // Remove secure and non-secure instances of the structured content.
+        // Typically the structured content will be in one or the other if at all.
+        getStructuredContentCache().remove(nameKey+"-"+true);
+        getStructuredContentCache().remove(nameKey+"-"+false);
+
+        getStructuredContentCache().remove(typeKey+"-"+true);
+        getStructuredContentCache().remove(typeKey+"-"+false);
+    }
+
+    public List<ArchivedStructuredContentPublisher> getArchivedStructuredContentListeners() {
+        return archivedStructuredContentListeners;
+    }
+
+    public void setArchivedStructuredContentListeners(List<ArchivedStructuredContentPublisher> archivedStructuredContentListeners) {
+        this.archivedStructuredContentListeners = archivedStructuredContentListeners;
     }
 }

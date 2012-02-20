@@ -45,7 +45,7 @@ public class CustomerListDataSourceFactory implements DataSourceFactory {
 	public void createDataSource(String name, OperationTypes operationTypes, Object[] additionalItems, AsyncCallback<DataSource> cb) {
 		if (dataSource == null) {
 			operationTypes = new OperationTypes(OperationType.ENTITY, OperationType.ENTITY, OperationType.ENTITY, OperationType.ENTITY, OperationType.ENTITY);
-			PersistencePerspective persistencePerspective = new PersistencePerspective(operationTypes, new String[]{}, new ForeignKey[]{new ForeignKey("challengeQuestion", EntityImplementations.CHALLENGE_QUESTION, null, ForeignKeyRestrictionType.ID_EQ, "question"), new ForeignKey(localeForeignKey, EntityImplementations.LOCALEIMPL, null, ForeignKeyRestrictionType.ID_EQ, "friendlyName")});
+			PersistencePerspective persistencePerspective = new PersistencePerspective(operationTypes, new String[]{}, new ForeignKey[]{new ForeignKey("challengeQuestion", EntityImplementations.CHALLENGE_QUESTION, null, ForeignKeyRestrictionType.ID_EQ, "question"), new ForeignKey(localeForeignKey, EntityImplementations.LOCALE, null, ForeignKeyRestrictionType.ID_EQ, "friendlyName")});
 			DataSourceModule[] modules = new DataSourceModule[]{
 				new BasicClientEntityModule(CeilingEntities.CUSTOMER, persistencePerspective, AppServices.DYNAMIC_ENTITY)
 			};

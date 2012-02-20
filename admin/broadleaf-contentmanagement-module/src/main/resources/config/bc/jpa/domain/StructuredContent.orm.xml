@@ -47,9 +47,9 @@
                      (SELECT sandboxItem.temporaryItemId
                         FROM org.broadleafcommerce.openadmin.server.domain.SandBoxItemImpl sandboxItem
                         WHERE (sandboxItem.originalSandBox = :sandbox OR sandboxItem.sandBox = :sandbox) AND
-                               sandboxItem.archivedFlag = false AND
+                               sandboxItem.archivedFlag = 'N' AND
                                sandboxItem.temporaryItemId = structuredContent.id)
-               ORDER BY priority
+               ORDER BY structuredContent.priority
 		</query>
 	</named-query>
 
@@ -88,7 +88,7 @@
                      (SELECT sandboxItem.temporaryItemId
                         FROM org.broadleafcommerce.openadmin.server.domain.SandBoxItemImpl sandboxItem
                         WHERE (sandboxItem.originalSandBox = :sandbox OR sandboxItem.sandBox = :sandbox) AND
-                               sandboxItem.archivedFlag = false AND
+                               sandboxItem.archivedFlag = 'N' AND
                                sandboxItem.temporaryItemId = structuredContent.id)
                ORDER BY structuredContent.priority
 		</query>

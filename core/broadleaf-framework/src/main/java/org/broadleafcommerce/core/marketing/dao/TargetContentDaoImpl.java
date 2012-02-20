@@ -17,7 +17,7 @@
 package org.broadleafcommerce.core.marketing.dao;
 
 import org.broadleafcommerce.core.marketing.domain.TargetContent;
-import org.broadleafcommerce.persistence.EntityConfiguration;
+import org.broadleafcommerce.common.persistence.EntityConfiguration;
 import org.hibernate.ejb.QueryHints;
 import org.springframework.stereotype.Repository;
 
@@ -28,6 +28,11 @@ import javax.persistence.Query;
 import java.util.List;
 
 @Repository("blTargetContentDao")
+/**
+ *
+ * @deprecated  No longer used as of Broadleaf 1.5
+ */
+@Deprecated
 public class TargetContentDaoImpl implements TargetContentDao {
 
     @PersistenceContext(unitName = "blPU")

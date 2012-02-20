@@ -70,20 +70,20 @@ public class PagesPresenter extends HtmlEditingPresenter implements Instantiable
 
 	@Override
 	protected void removeClicked() {
-        SC.confirm("Are your sure you want to delete this entity?", new BooleanCallback() {
-            public void execute(Boolean value) {
-                if (value) {
-                    display.getListDisplay().getGrid().removeSelectedData(new DSCallback() {
-                        @Override
-                        public void execute(DSResponse response, Object rawData, DSRequest request) {
-                            destroyTemplateForm();
-                            formPresenter.disable();
-                            display.getListDisplay().getRemoveButton().disable();
-                        }
-                    }, null);
+        Record selectedRecord = display.getListDisplay().getGrid().getSelectedRecord();
+        final String primaryKey = display.getListDisplay().getGrid().getDataSource().getPrimaryKeyFieldName();
+        final String id = selectedRecord.getAttribute(primaryKey);
+        display.getListDisplay().getGrid().removeSelectedData(new DSCallback() {
+            @Override
+            public void execute(DSResponse response, Object rawData, DSRequest request) {
+                if (getDisplay().getListDisplay().getGrid().getResultSet() == null) {
+                    getDisplay().getListDisplay().getGrid().setData(new Record[]{});
                 }
+                destroyTemplateForm();
+                formPresenter.disable();
+                display.getListDisplay().getRemoveButton().disable();
             }
-        });
+        }, null);
 	}
 
     protected void destroyTemplateForm() {
@@ -197,10 +197,26 @@ public class PagesPresenter extends HtmlEditingPresenter implements Instantiable
                                             getDisplay().getDynamicFormDisplay().getRefreshButton().disable();
                                             if (!currentPageId.equals(newId)) {
                                                 Record myRecord = getDisplay().getListDisplay().getGrid().getResultSet().find("id", currentPageId);
-                                                myRecord.setAttribute("id", newId);
-                                                currentPageRecord = myRecord;
-                                                currentPageId = newId;
+                                                if (myRecord != null) {
+                                                    myRecord.setAttribute("id", newId);
+                                                    currentPageRecord = myRecord;
+                                                    currentPageId = newId;
+                                                }  else {
+                                                    String primaryKey = getDisplay().getListDisplay().getGrid().getDataSource().getPrimaryKeyFieldName();
+                                                    getDisplay().getListDisplay().getGrid().getDataSource().
+                                                        fetchData(new Criteria(primaryKey, newId), new DSCallback() {
+                                                            @Override
+                                                            public void execute(DSResponse response, Object rawData, DSRequest request) {
+                                                                getDisplay().getListDisplay().getGrid().clearCriteria();
+                                                                getDisplay().getListDisplay().getGrid().setData(response.getData());
+                                                                getDisplay().getListDisplay().getGrid().selectRecord(0);
+                                                            }
+                                                        });
+                                                    SC.say("Current item no longer matches the search criteria.  Clearing filter criteria.");
+                                                }
                                             }
+
+
                                             getDisplay().getListDisplay().getGrid().selectRecord(getDisplay().getListDisplay().getGrid().getRecordIndex(currentPageRecord));
                                         }
                                     }

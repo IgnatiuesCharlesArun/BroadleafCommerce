@@ -16,8 +16,16 @@
 
 package org.broadleafcommerce.openadmin.client.datasource.dynamic.module;
 
-import com.anasoft.os.daofusion.cto.client.CriteriaTransferObject;
-import com.anasoft.os.daofusion.cto.client.FilterAndSortCriteria;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Set;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -51,13 +59,17 @@ import com.smartgwt.client.widgets.Canvas;
 import com.smartgwt.client.widgets.form.validator.Validator;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.tree.TreeNode;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.broadleafcommerce.openadmin.client.BLCMain;
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.AbstractDynamicDataSource;
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.operation.EntityOperationType;
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.operation.EntityServiceAsyncCallback;
 import org.broadleafcommerce.openadmin.client.dto.ClassMetadata;
+import org.broadleafcommerce.openadmin.client.dto.CriteriaTransferObject;
 import org.broadleafcommerce.openadmin.client.dto.DynamicResultSet;
 import org.broadleafcommerce.openadmin.client.dto.Entity;
+import org.broadleafcommerce.openadmin.client.dto.FilterAndSortCriteria;
 import org.broadleafcommerce.openadmin.client.dto.ForeignKey;
 import org.broadleafcommerce.openadmin.client.dto.MergedPropertyType;
 import org.broadleafcommerce.openadmin.client.dto.OperationType;
@@ -65,24 +77,12 @@ import org.broadleafcommerce.openadmin.client.dto.PersistencePackage;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePerspective;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePerspectiveItemType;
 import org.broadleafcommerce.openadmin.client.dto.Property;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
 import org.broadleafcommerce.openadmin.client.security.SecurityManager;
 import org.broadleafcommerce.openadmin.client.service.AbstractCallback;
 import org.broadleafcommerce.openadmin.client.service.AppServices;
 import org.broadleafcommerce.openadmin.client.service.DynamicEntityServiceAsync;
 import org.broadleafcommerce.openadmin.client.validation.ValidationFactoryManager;
 import org.broadleafcommerce.openadmin.client.view.dynamic.form.FormHiddenEnum;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.Set;
 
 /**
  * 
@@ -98,14 +98,20 @@ public class BasicClientEntityModule implements DataSourceModule {
 	protected String linkedValue;
 	protected DynamicEntityServiceAsync service;
 	protected final String ceilingEntityFullyQualifiedClassname;
+    protected final String fetchTypeFullyQualifiedClassname;
 	protected PersistencePerspective persistencePerspective;
 	protected Long loadLevelCount = 0L;
 	
 	public BasicClientEntityModule(String ceilingEntityFullyQualifiedClassname, PersistencePerspective persistencePerspective, DynamicEntityServiceAsync service) {
-		this.service = service;
-		this.ceilingEntityFullyQualifiedClassname = ceilingEntityFullyQualifiedClassname;
-		this.persistencePerspective = persistencePerspective;
+		this(ceilingEntityFullyQualifiedClassname, null, persistencePerspective, service);
 	}
+
+    public BasicClientEntityModule(String ceilingEntityFullyQualifiedClassname, String fetchTypeFullyQualifiedClassname, PersistencePerspective persistencePerspective, DynamicEntityServiceAsync service) {
+        this.service = service;
+        this.ceilingEntityFullyQualifiedClassname = ceilingEntityFullyQualifiedClassname;
+        this.fetchTypeFullyQualifiedClassname = fetchTypeFullyQualifiedClassname;
+        this.persistencePerspective = persistencePerspective;
+    }
 	
 	/**
      * Transforms the given <tt>request</tt> into
@@ -155,7 +161,30 @@ public class BasicClientEntityModule implements DataSourceModule {
                     if (filterValue != null) {
                         filterString = filterValue.toString();
                     }
-                    filterCriteria.setFilterValue(dataSource.stripDuplicateAllowSpecialCharacters(filterString));
+                    String fieldTypeVal = null;
+                    DataSourceField field = dataSource.getField(fieldName);
+                    if (field != null) {
+                        fieldTypeVal = field.getAttribute("fieldType");
+                    }
+                    SupportedFieldType fieldType = fieldTypeVal==null?SupportedFieldType.STRING:SupportedFieldType.valueOf(fieldTypeVal);
+                    if (fieldType != null) {
+                        switch (fieldType) {
+                            case DECIMAL:
+                                processFilterValueClause(filterCriteria, filterString);
+                                break;
+                            case INTEGER:
+                                processFilterValueClause(filterCriteria, filterString);
+                                break;
+                            case MONEY:
+                                processFilterValueClause(filterCriteria, filterString);
+                                break;
+                            default:
+                                filterCriteria.setFilterValue(dataSource.stripDuplicateAllowSpecialCharacters(filterString));
+                                break;
+                        }
+                    } else {
+                        filterCriteria.setFilterValue(dataSource.stripDuplicateAllowSpecialCharacters(filterString));
+                    }
         		} else {
         			JSONValue value = JSONParser.parse(jsObj);
         			JSONObject criteriaObj = value.isObject();
@@ -171,7 +200,19 @@ public class BasicClientEntityModule implements DataSourceModule {
         
         return cto;
     }
-    
+
+    protected void processFilterValueClause(FilterAndSortCriteria filterCriteria, String filterString) {
+        String filterVal = dataSource.stripDuplicateAllowSpecialCharacters(filterString);
+        int pos = filterVal.indexOf("-");
+        if (pos > 0) {
+            String filterValue1 = filterVal.substring(0, pos).trim();
+            String filterValue2 = filterVal.substring(pos + 1, filterVal.length()).trim();
+            filterCriteria.setFilterValues(filterValue1, filterValue2);
+        } else {
+            filterCriteria.setFilterValue(filterVal);
+        }
+    }
+
     public ForeignKey getCurrentForeignKey() {
 		return currentForeignKey;
 	}
@@ -198,31 +239,91 @@ public class BasicClientEntityModule implements DataSourceModule {
 						JSONArray array = itemObj.get("criteria").isArray();
 						buildCriteria(array, cto);
 					} else {
-						FilterAndSortCriteria filterCriteria = cto.get(val.isString().stringValue());
-						String[] items = filterCriteria.getFilterValues();
-						String[] newItems = new String[items.length + 1];
-						int j = 0;
-						for (String item : items) {
-							newItems[j] = item;
-							j++;
-						}
-						JSONValue value = itemObj.get("value");
-						JSONString strVal = value.isString();
-						if (strVal != null) {
-							newItems[j] = strVal.stringValue();
-						} else {
-							newItems[j] = value.isObject().get("value").isString().stringValue();
-							/*
-							 * TODO need to add special parsing for relative dates. Convert this relative
-							 * value to an actual date string.
-							 */
-						}
-						
-						filterCriteria.setFilterValues(newItems);
+                        FilterAndSortCriteria filterCriteria = cto.get(val.isString().stringValue());
+                        String[] items = filterCriteria.getFilterValues();
+                        String[] newItems = new String[items.length + 1];
+                        int j = 0;
+                        for (String item : items) {
+                            newItems[j] = item;
+                            j++;
+                        }
+                        JSONValue value = itemObj.get("value");
+                        JSONString strVal = value.isString();
+                        if (strVal != null) {
+                            newItems[j] = strVal.stringValue();
+                        } else {
+                            newItems[j] = value.isObject().get("value").isString().stringValue();
+                        }
+                        String fieldTypeVal = null;
+                        DataSourceField field = dataSource.getField(val.isString().stringValue());
+                        if (field != null) {
+                            fieldTypeVal = field.getAttribute("fieldType");
+                        }
+                        SupportedFieldType fieldType = fieldTypeVal==null?SupportedFieldType.STRING:SupportedFieldType.valueOf(fieldTypeVal);
+                        if (fieldType != null) {
+                            switch (fieldType) {
+                                case DECIMAL:
+                                    processFilterValueClause(filterCriteria, newItems[j]);
+                                    break;
+                                case INTEGER:
+                                    processFilterValueClause(filterCriteria, newItems[j]);
+                                    break;
+                                case MONEY:
+                                    processFilterValueClause(filterCriteria, newItems[j]);
+                                    break;
+                                case DATE:
+                                    if (newItems.length > 1) {
+                                        for (int x=0;x<newItems.length;x++) {
+                                            newItems[x] = updateMinutesFromDateFilter(newItems[x], x);
+                                        }
+                                        filterCriteria.setFilterValues(newItems);
+                                    } else {
+                                        String[] dateItems = new String[2];
+                                        JSONValue operator = itemObj.get("operator");
+                                        String op = operator.isString().stringValue();
+                                        if (op.startsWith("greater")) {
+                                            dateItems[0] = newItems[0];
+                                            dateItems[1] = null;
+                                        } else {
+                                            dateItems[0] = null;
+                                            dateItems[1] = newItems[0];
+                                        }
+                                        for (int x=0;x<dateItems.length;x++) {
+                                            dateItems[x] = updateMinutesFromDateFilter(dateItems[x], x);
+                                        }
+                                        filterCriteria.setFilterValues(dateItems);
+                                    }
+                                    break;
+                                default:
+                                    filterCriteria.setFilterValues(newItems);
+                                    break;
+                            }
+                        } else {
+                            filterCriteria.setFilterValues(newItems);
+                        }
 					}
 				}
 			}
 		}
+    }
+    
+    protected String updateMinutesFromDateFilter(String originalDateString, int position) {
+        if (originalDateString != null) {
+            int pos = originalDateString.indexOf("T06:00:00");
+            switch (position) {
+                case 0: 
+                    if (pos >= 0) {
+                        return originalDateString.substring(0, pos) + "T00:00:00";
+                    }
+                    break;
+                default:
+                    if (pos >= 0) {
+                        return originalDateString.substring(0, pos) + "T23:59:00";
+                    }
+                    break;
+            }
+        }
+        return originalDateString;
     }
     
     public boolean isCompatible(OperationType operationType) {
@@ -248,7 +349,7 @@ public class BasicClientEntityModule implements DataSourceModule {
             }
         } else {
             CriteriaTransferObject cto = getCto(request);
-            service.fetch(new PersistencePackage(ceilingEntityFullyQualifiedClassname, null, persistencePerspective, customCriteria, BLCMain.csrfToken), cto, new EntityServiceAsyncCallback<DynamicResultSet>(EntityOperationType.FETCH, requestId, request, response, dataSource) {
+            service.fetch(new PersistencePackage(ceilingEntityFullyQualifiedClassname, fetchTypeFullyQualifiedClassname, null, persistencePerspective, customCriteria, BLCMain.csrfToken), cto, new EntityServiceAsyncCallback<DynamicResultSet>(EntityOperationType.FETCH, requestId, request, response, dataSource) {
                 public void onSuccess(DynamicResultSet result) {
                     super.onSuccess(result);
                     TreeNode[] recordList = buildRecords(result, null);
@@ -736,7 +837,6 @@ public class BasicClientEntityModule implements DataSourceModule {
 						field.setPrimaryKey(true);
 					}
 					field.setCanEdit(false);
-					hidden = true;
 					field.setRequired(required);
 					//field.setValidOperators(getBasicIdOperators());
 					break;
@@ -848,8 +948,8 @@ public class BasicClientEntityModule implements DataSourceModule {
 					field.setValidators(ValidationFactoryManager.getInstance().createValidators(property.getMetadata().getPresentationAttributes().getValidationConfigurations(), propertyName));
 				}
 				if (fieldType.equals(SupportedFieldType.ID.toString())) {
-					field.setHidden(true);
-					field.setAttribute("permanentlyHidden", true);
+					field.setHidden(hidden);
+					field.setAttribute("permanentlyHidden", hidden);
                     formHidden = FormHiddenEnum.VISIBLE;
 				} else if (hidden != null) {
 					field.setHidden(hidden);

@@ -16,9 +16,9 @@
 
 package org.broadleafcommerce.openadmin.server.domain;
 
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
-import org.broadleafcommerce.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -71,7 +71,7 @@ public class SandBoxImpl implements SandBox {
     
     @OneToMany(mappedBy = "sandBox", targetEntity = SandBoxItemImpl.class, cascade = {CascadeType.ALL})
     @Cascade(value={org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @Where(clause = "ARCHIVED_FLAG = 0")
+    @Where(clause = "ARCHIVED_FLAG = 'N'")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region="blSandBoxElements")
     @BatchSize(size = 50)
     protected Set<SandBoxItem> sandBoxItems = new HashSet<SandBoxItem>();

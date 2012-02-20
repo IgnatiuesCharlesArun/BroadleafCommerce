@@ -127,4 +127,5 @@ public interface StructuredContentField extends Serializable {
      * @param auditable
      */
     public void setAuditable(@Nullable AdminAuditable auditable);
+
 }

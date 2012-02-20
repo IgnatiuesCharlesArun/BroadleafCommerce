@@ -42,5 +42,8 @@ public class CeilingEntities {
 	public static final String OFFER = "org.broadleafcommerce.core.offer.domain.Offer";
 	public static final String OFFER_ITEM_CRITERIA = "org.broadleafcommerce.core.offer.domain.OfferItemCriteria";
     public static final String DISCRETE_ORDER_ITEM_FEE_PRICE = "org.broadleafcommerce.core.order.domain.DiscreteOrderItemFeePrice";
+    public static final String CUSTOMERADDRESS = "org.broadleafcommerce.profile.core.domain.CustomerAddress";
+    public static final String PAYMENT_RESPONSE_ITEM = "org.broadleafcommerce.core.payment.domain.PaymentResponseItem";
+    public static final String PAYMENT_LOG = "org.broadleafcommerce.core.payment.domain.PaymentLog";
 
 }

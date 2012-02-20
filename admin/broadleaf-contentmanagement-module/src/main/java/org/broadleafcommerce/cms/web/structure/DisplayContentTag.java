@@ -16,28 +16,52 @@
 
 package org.broadleafcommerce.cms.web.structure;
 
-import org.broadleafcommerce.cms.structure.domain.StructuredContent;
+import org.broadleafcommerce.cms.file.service.StaticAssetService;
 import org.broadleafcommerce.cms.structure.domain.StructuredContentType;
+import org.broadleafcommerce.cms.structure.dto.StructuredContentDTO;
 import org.broadleafcommerce.cms.structure.service.StructuredContentService;
 import org.broadleafcommerce.cms.web.BroadleafProcessURLFilter;
-import org.broadleafcommerce.cms.web.utility.FieldMapWrapper;
 import org.broadleafcommerce.common.RequestDTO;
 import org.broadleafcommerce.common.TimeDTO;
 import org.broadleafcommerce.common.locale.domain.Locale;
+import org.broadleafcommerce.common.time.SystemTime;
 import org.broadleafcommerce.openadmin.server.domain.SandBox;
-import org.broadleafcommerce.openadmin.time.SystemTime;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Tag used to display structured content that is maintained with the Broadleaf CMS.
+ *
+ * Usage based on the following attributes:<br>
+ * <ul>
+ *     <li>contentType (required) - specifies the content you are retrieving</li>
+ *     <li>contentName - if included will retrieve only content that matches the name.   When no name is specified,
+ *                       all matching content items of the passed in type are retrieved.</li>
+ *     <li>count - if specified limits the results to a specified number of items.   The content will be returned
+ *                 according to priority.   If content items share the same priority, then they will be returned
+ *                 randomly.  Consider the example with 5 matching items with priorities (1,2,3,3,3) respectively.  If
+ *                 the count is set to 3.   Items 1 and 2 will ALWAYS be returned.   The third item returned will
+ *                 randomy rotate through the 3rd, 4th, and 5th item.
+ *     </li>
+ *     <li>contentListVar - allows you to specify an alternate name for the list of content results.   By default,
+ *                          the results are returned in the page attributed "contentList"</li>
+ *     <li>contentItemVar - since a typical usage is to only return one item, the first item is returned in the
+ *                          variable "contentItem".   This variable can be used to change the attribute name.</li>
+ *     <li>numResultsVar  - variable holding the returns the number of results being returned to through the tag-lib.
+ *                          defaults to "numResults".</li>
+ *     <li>locale         - the locale being targeted for the content.   Defaults to locale that exists in
+ *                          the requestAttribute "blLocale".   This is typically setup through Broadleaf's
+ *                          ProcessURLFilter.</li>
+ * </ul>
+ */
 public class DisplayContentTag extends BodyTagSupport {
     private static final long serialVersionUID = 1L;
 
@@ -50,12 +74,17 @@ public class DisplayContentTag extends BodyTagSupport {
     private String contentName;
     private Object product;
     private Integer count;
-    private String contentListVar = "contentList";
-    private String contentItemVar = "contentItem";
-    private String numResultsVar = "numResults";
+    private String contentListVar;
+    private String contentItemVar;
+    private String numResultsVar;
     private Locale locale;
 
     private StructuredContentService structuredContentService;
+    private StaticAssetService staticAssetService;
+    
+    public DisplayContentTag() {
+        initVariables();
+    }
 
 
     /**
@@ -66,7 +95,7 @@ public class DisplayContentTag extends BodyTagSupport {
      * @return
      */
     private Map<String,Object> buildMvelParameters(HttpServletRequest request) {
-        TimeDTO timeDto = SystemTime.asTimeDTO();
+        TimeDTO timeDto = new TimeDTO(SystemTime.asCalendar());
         RequestDTO requestDto = (RequestDTO) request.getAttribute(REQUEST_DTO);
 
         Map<String, Object> mvelParameters = new HashMap<String, Object>();
@@ -88,37 +117,31 @@ public class DisplayContentTag extends BodyTagSupport {
     }
 
 
-    protected StructuredContentService getStructuredContentService(PageContext context) {
-        if (structuredContentService == null) {
+    protected void initServices() {
+        if (structuredContentService == null || staticAssetService == null) {
             WebApplicationContext applicationContext = WebApplicationContextUtils.getWebApplicationContext(pageContext.getServletContext());
             structuredContentService = (StructuredContentService) applicationContext.getBean("blStructuredContentService");
-        }
-        return structuredContentService;
-    }
-
-    // The following FieldMapWrapper allows for JSP syntax to be item.body
-    // instead of item.body.value
-    private List<Map> wrapFieldMaps(List<StructuredContent> contentItems) {
-        if (contentItems != null) {
-            List<Map> contentFieldList = new ArrayList<Map>();
-            for (StructuredContent item : contentItems) {
-                contentFieldList.add(new FieldMapWrapper(item.getStructuredContentFields()));
-            }
-            return contentFieldList;
-
-        } else {
-            return null;
+            staticAssetService = (StaticAssetService) applicationContext.getBean("blStaticAssetService");
         }
     }
-
+    
+    public boolean isSecure(HttpServletRequest request) {
+        boolean secure = false;
+        if (request != null) {
+             secure = ("HTTPS".equalsIgnoreCase(request.getScheme()) || request.isSecure());
+        }
+        return secure;
+    }
+    
 
     public int doStartTag() throws JspException {
         HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
         Map<String, Object> mvelParameters = buildMvelParameters(request);
         SandBox currentSandbox = (SandBox) request.getAttribute(BroadleafProcessURLFilter.SANDBOX_VAR);
+        initServices();
 
-        List<StructuredContent> contentItems;
-        StructuredContentType structuredContentType = getStructuredContentService(pageContext).findStructuredContentTypeByName(contentType);
+        List<StructuredContentDTO> contentItems;
+        StructuredContentType structuredContentType = structuredContentService.findStructuredContentTypeByName(contentType);
 
         if (locale == null) {
             locale = (Locale) request.getAttribute(BroadleafProcessURLFilter.LOCALE_VAR);
@@ -127,20 +150,23 @@ public class DisplayContentTag extends BodyTagSupport {
         int cnt = (count == null) ? Integer.MAX_VALUE : count;
 
         if (contentName == null || "".equals(contentName)) {
-            contentItems = structuredContentService.lookupStructuredContentItemsByType(currentSandbox, structuredContentType, locale, cnt, mvelParameters);
+            contentItems = structuredContentService.lookupStructuredContentItemsByType(currentSandbox, structuredContentType, locale, cnt, mvelParameters, isSecure(request));
         } else {
-            contentItems = structuredContentService.lookupStructuredContentItemsByName(currentSandbox, structuredContentType, contentName, locale, cnt, mvelParameters);
+            contentItems = structuredContentService.lookupStructuredContentItemsByName(currentSandbox, structuredContentType, contentName, locale, cnt, mvelParameters, isSecure(request));
         }
-
+                
         pageContext.setAttribute(getNumResultsVar(), contentItems.size());
         if (contentItems.size() > 0) {
-            List<Map> returnFields = wrapFieldMaps(contentItems);
-            pageContext.setAttribute(contentItemVar, returnFields.get(0));
-            pageContext.setAttribute(contentListVar, returnFields);
+            List<Map<String,String>> contentItemFields = new ArrayList<Map<String, String>>();
+            for(StructuredContentDTO item : contentItems) {
+                contentItemFields.add(item.getValues());
+            }
+            pageContext.setAttribute(contentItemVar, contentItemFields.get(0));
+            pageContext.setAttribute(contentListVar, contentItemFields);
             pageContext.setAttribute("structuredContentList", contentItems);
             pageContext.setAttribute(numResultsVar, contentItems.size());
         } else {
-            pageContext.setAttribute(contentItemVar, contentItems);
+            pageContext.setAttribute(contentItemVar, null);
             pageContext.setAttribute(contentListVar, null);
             pageContext.setAttribute("structuredContentList", null);
             pageContext.setAttribute(numResultsVar, 0);
@@ -149,6 +175,23 @@ public class DisplayContentTag extends BodyTagSupport {
         return EVAL_BODY_INCLUDE;
     }
 
+    @Override
+    public int doEndTag() throws JspException {
+        int returnVal = super.doEndTag();
+        initVariables();
+        return returnVal;
+    }
+
+    private void initVariables() {
+        contentType=null;
+        contentName=null;
+        product=null;
+        count=null;
+        locale=null; 
+        contentListVar = "contentList";
+        contentItemVar = "contentItem";
+        numResultsVar = "numResults";
+    }
 
     public String getContentType() {
         return contentType;

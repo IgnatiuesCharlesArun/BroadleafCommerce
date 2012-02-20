@@ -18,16 +18,16 @@ package org.broadleafcommerce.core.catalog.domain;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
+import org.broadleafcommerce.common.util.DateUtil;
+import org.broadleafcommerce.common.util.UrlUtil;
 import org.broadleafcommerce.core.media.domain.Media;
 import org.broadleafcommerce.core.media.domain.MediaImpl;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.profile.cache.Hydrated;
-import org.broadleafcommerce.profile.cache.HydratedSetup;
-import org.broadleafcommerce.profile.cache.engine.CacheFactoryException;
-import org.broadleafcommerce.profile.util.DateUtil;
-import org.broadleafcommerce.profile.util.UrlUtil;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.cache.Hydrated;
+import org.broadleafcommerce.common.cache.HydratedSetup;
+import org.broadleafcommerce.common.cache.engine.CacheFactoryException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -38,6 +38,7 @@ import org.hibernate.annotations.Index;
 import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -81,7 +82,7 @@ public class CategoryImpl implements Category {
             if (!ignoreTopLevel || myCategory.getDefaultParentCategory() != null) {
                 if (linkBuffer.length() == 0) {
                     linkBuffer.append(myCategory.getUrlKey());
-                } else {
+                } else if(myCategory.getUrlKey() != null && !"/".equals(myCategory.getUrlKey())){
                     linkBuffer.insert(0, myCategory.getUrlKey() + '/');
                 }
             }
@@ -96,7 +97,12 @@ public class CategoryImpl implements Category {
         if (urlKey == null) {
         	throw new CacheFactoryException("Cannot create childCategoryURLMap - the urlKey for a category("+category.getId()+") was null");
         }
-    	String currentPath = startingPath + '/' + category.getUrlKey();
+
+        String currentPath = "";
+        if (! "/".equals(category.getUrlKey())) {
+            currentPath = startingPath + "/" + category.getUrlKey();
+        }
+
         List<Long> newCategoryList = new ArrayList<Long>(startingCategoryList);
         newCategoryList.add(category.getId());
 
@@ -110,7 +116,7 @@ public class CategoryImpl implements Category {
     @GeneratedValue(generator= "CategoryId")
     @GenericGenerator(
         name="CategoryId",
-        strategy="org.broadleafcommerce.persistence.IdOverrideTableGenerator",
+        strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",
         parameters = {
             @Parameter(name="table_name", value="SEQUENCE_GENERATOR"),
             @Parameter(name="segment_column_name", value="ID_NAME"),
@@ -155,6 +161,7 @@ public class CategoryImpl implements Category {
     protected String displayTemplate;
 
     @Lob
+    @Type(type = "org.hibernate.type.StringClobType")
     @Column(name = "LONG_DESCRIPTION")
     @AdminPresentation(friendlyName="Category Long Description", order=6, group="Description", largeEntry=true)
     protected String longDescription;
@@ -241,7 +248,18 @@ public class CategoryImpl implements Category {
 
     @Override
     public String getUrl() {
-        return url;
+        // TODO: if null return
+        // if blank return
+        // if startswith "/" return
+        // if contains a ":" and no "?" or (contains a ":" before a "?") return
+        // else "add a /" at the beginning
+        if(url == null || url.equals("") || url.startsWith("/")) {
+            return url;       
+        } else if ((url.contains(":") && !url.contains("?")) || url.indexOf('?', url.indexOf(':')) != -1) {
+            return url;
+        } else {
+            return "/" + url;
+        }
     }
 
     @Override
@@ -300,11 +318,11 @@ public class CategoryImpl implements Category {
     @Override
     public boolean isActive() {
         if (LOG.isDebugEnabled()) {
-            if (!DateUtil.isActive(activeStartDate, activeEndDate, false)) {
+            if (!DateUtil.isActive(activeStartDate, activeEndDate, true)) {
                 LOG.debug("category, " + id + ", inactive due to date");
             }
         }
-        return DateUtil.isActive(activeStartDate, activeEndDate, false);
+        return DateUtil.isActive(activeStartDate, activeEndDate, true);
     }
 
     @Override
@@ -403,7 +421,9 @@ public class CategoryImpl implements Category {
 
     @Override
 	public Map<String, List<Long>> getChildCategoryURLMap() {
-        HydratedSetup.populateFromCache(this);
+        if (childCategoryURLMap == null) {
+            HydratedSetup.populateFromCache(this);
+        }
         return childCategoryURLMap;
     }
 

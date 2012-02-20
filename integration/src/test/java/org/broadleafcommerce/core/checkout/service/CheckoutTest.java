@@ -44,6 +44,7 @@ import org.broadleafcommerce.core.payment.domain.Referenced;
 import org.broadleafcommerce.core.payment.service.SecurePaymentInfoService;
 import org.broadleafcommerce.core.payment.service.type.PaymentInfoType;
 import org.broadleafcommerce.core.pricing.service.workflow.type.ShippingServiceType;
+<<<<<<< HEAD
 import org.broadleafcommerce.money.Money;
 import org.broadleafcommerce.openadmin.time.SystemTime;
 import org.broadleafcommerce.profile.core.domain.Address;
@@ -53,8 +54,13 @@ import org.broadleafcommerce.profile.core.domain.CountryImpl;
 import org.broadleafcommerce.profile.core.domain.Customer;
 import org.broadleafcommerce.profile.core.domain.State;
 import org.broadleafcommerce.profile.core.domain.StateImpl;
+=======
+import org.broadleafcommerce.common.money.Money;
+import org.broadleafcommerce.common.time.SystemTime;
+import org.broadleafcommerce.profile.core.domain.*;
+>>>>>>> develop
 import org.broadleafcommerce.profile.core.service.CustomerService;
-import org.broadleafcommerce.profile.encryption.EncryptionModule;
+import org.broadleafcommerce.common.encryption.EncryptionModule;
 import org.broadleafcommerce.test.BaseTest;
 import org.springframework.transaction.annotation.Transactional;
 import org.testng.annotations.Test;

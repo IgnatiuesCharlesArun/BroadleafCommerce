@@ -17,9 +17,13 @@
 package org.broadleafcommerce.openadmin.client.view;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.smartgwt.client.data.DataSource;
+import com.smartgwt.client.data.Record;
 import com.smartgwt.client.types.Alignment;
 import com.smartgwt.client.types.BkgndRepeat;
 import com.smartgwt.client.types.Cursor;
@@ -37,15 +41,27 @@ import com.smartgwt.client.widgets.layout.VLayout;
 import com.smartgwt.client.widgets.menu.IMenuButton;
 import com.smartgwt.client.widgets.menu.Menu;
 import com.smartgwt.client.widgets.menu.MenuItem;
+import com.smartgwt.client.widgets.menu.events.MenuItemClickEvent;
 import com.smartgwt.client.widgets.toolbar.ToolStrip;
+import org.broadleafcommerce.openadmin.client.BLCLaunch;
 import org.broadleafcommerce.openadmin.client.BLCMain;
 import org.broadleafcommerce.openadmin.client.Module;
+import org.broadleafcommerce.openadmin.client.callback.ItemEdited;
+import org.broadleafcommerce.openadmin.client.callback.ItemEditedHandler;
+import org.broadleafcommerce.openadmin.client.datasource.CeilingEntities;
+import org.broadleafcommerce.openadmin.client.datasource.EntityImplementations;
+import org.broadleafcommerce.openadmin.client.datasource.dynamic.DynamicEntityDataSource;
+import org.broadleafcommerce.openadmin.client.security.AdminUser;
 import org.broadleafcommerce.openadmin.client.security.SecurityManager;
 import org.broadleafcommerce.openadmin.client.setup.AppController;
+import org.broadleafcommerce.openadmin.client.setup.AsyncCallbackAdapter;
+import org.broadleafcommerce.openadmin.client.view.dynamic.dialog.EntityEditDialog;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 
 /**
@@ -53,33 +69,30 @@ import java.util.LinkedHashMap;
  * @author jfischer
  *
  */
-public class MasterView extends VLayout {
+public class MasterView extends VLayout implements ValueChangeHandler<String> {
 	
 	protected Canvas canvas;
 	protected ToolStrip bottomBar;
 	protected Label status;
-
-    protected Label selectedPrimaryMenuOption;
-    protected Label selectedSecondaryMenuOption;
+    
+    protected Map<String,Label> moduleLabelMap = new HashMap<String, Label>();
 
     protected HLayout secondaryMenu = new HLayout();
+    protected Label selectedSecondaryMenuOption;
 
-    public static String moduleKey;
-    protected String pageKey;
     protected LinkedHashMap<String, Module> modules;
 
 
     public MasterView(String moduleKey, String pageKey, LinkedHashMap<String, Module> modules) {
-        MasterView.moduleKey = moduleKey;
-        this.pageKey = pageKey;
+
         this.modules = modules;
 
         setWidth100();
         setHeight100();
 
         addMember(buildHeader());
-        addMember(buildPrimaryMenu());
-        addMember(buildSecondaryMenu(pageKey));
+        addMember(buildPrimaryMenu(moduleKey));
+        addMember(buildSecondaryMenu(pageKey, moduleKey));
 
 
         canvas = new HLayout();
@@ -89,9 +102,47 @@ public class MasterView extends VLayout {
         addMember(canvas);
 
         buildFooter();
+        bind();
     }
 
+    private void bind() {
+        History.addValueChangeHandler(this);
+    }
 
+    public void onValueChange(ValueChangeEvent<String> event) {
+        	String token = event.getValue();
+            if (token != null) {
+                String page = BLCLaunch.getSelectedPage(token);
+                String moduleName = BLCLaunch.getSelectedModule(token);
+
+                LinkedHashMap<String, String[]> pages = modules.get(moduleName).getPages();
+                if (SecurityManager.getInstance().isUserAuthorizedToViewModule(moduleName) &&
+                        SecurityManager.getInstance().isUserAuthorizedToViewSection(pages.get(page)[0])) {
+
+                    if (moduleName != null && ! moduleName.equals(BLCMain.currentModuleKey)) {
+                        BLCMain.setCurrentModuleKey(moduleName);            
+                        selectPrimaryMenu(moduleName);
+                        buildSecondaryMenu(page, moduleName);
+                        AppController.getInstance().clearCurrentView();
+                    } else {
+                        AppController.getInstance().clearCurrentView();
+                        buildSecondaryMenu(page, moduleName);
+                    }
+                }
+        	}
+        }
+    
+    private void selectPrimaryMenu(String selectedModule) {
+        // Set selected primary menu option.
+        for (String moduleKey : moduleLabelMap.keySet()) {
+            Label primaryMenuLabel = moduleLabelMap.get(moduleKey);
+            if (moduleKey.equals(selectedModule)) {
+                primaryMenuLabel.setBaseStyle("primaryMenuText-selected");
+            } else {
+                primaryMenuLabel.setBaseStyle("primaryMenuText");
+            }
+        }
+    }
 
     private Layout buildHeader() {
         HLayout header = new HLayout();
@@ -114,7 +165,7 @@ public class MasterView extends VLayout {
         return header;
     }
 
-    private void addAuthorizedModulesToMenu(Layout menuHolder) {
+    private void addAuthorizedModulesToMenu(Layout menuHolder, String moduleKey) {
         Collection<Module> allowedModules = modules.values();
         for (Iterator<Module> iterator = allowedModules.iterator(); iterator.hasNext(); ) {
             Module testModule =  iterator.next();
@@ -132,14 +183,17 @@ public class MasterView extends VLayout {
            moduleKey = allowedModules.iterator().next().getModuleKey();
        }
 
+
        for (Module module : allowedModules) {
            boolean selected = module.getModuleKey().equals(moduleKey);
-           menuHolder.addMember(buildPrimaryMenuOption(module, selected));
+           Label primaryMenuLabel = buildPrimaryMenuOption(module, selected);
+           menuHolder.addMember(primaryMenuLabel);
            menuHolder.addMember(buildMenuSpacer());
+           moduleLabelMap.put(module.getModuleKey(), primaryMenuLabel);
        }
     }
 
-    private Layout buildPrimaryMenu() {
+    private Layout buildPrimaryMenu(String currentModule) {
 
         HLayout moduleLayout = new HLayout();
         moduleLayout.setWidth100();
@@ -163,13 +217,12 @@ public class MasterView extends VLayout {
         LayoutSpacer sp = new LayoutSpacer();
         sp.setWidth(20);
         primaryMenuOptionsHolder.addMember(sp);
-        addAuthorizedModulesToMenu(primaryMenuOptionsHolder);
+        addAuthorizedModulesToMenu(primaryMenuOptionsHolder, currentModule);
         moduleLayout.addMember(primaryMenuOptionsHolder);
         return moduleLayout;
     }
 
-    private Layout buildSecondaryMenu(String selectedPage) {
-        Module currentModule = modules.get(moduleKey);
+    private Layout buildSecondaryMenu(String selectedPage, String moduleKey) {
         secondaryMenu.removeMembers(secondaryMenu.getMembers());
 
         LayoutSpacer sp2 = new LayoutSpacer();
@@ -246,8 +299,7 @@ public class MasterView extends VLayout {
 
         final String style;
         if (selected) {
-            style = "primaryMenuText-selected";
-            selectedPrimaryMenuOption = tmp;
+            style = "primaryMenuText-selected";            
         } else {
             style = "primaryMenuText";
         }
@@ -260,14 +312,12 @@ public class MasterView extends VLayout {
                 Object o = event.getSource();
                 if (o instanceof Label) {
                     final Label lbl = (Label) o;
-                    if (! lbl.getTitle().equals(selectedPrimaryMenuOption.getTitle())) {
-                        selectedPrimaryMenuOption.setBaseStyle("primaryMenuText");
+                    if (! "primaryMenuText-selected".equals(lbl.getBaseStyle())) {
+                        selectPrimaryMenu(module.getModuleKey());
                         lbl.setBaseStyle("primaryMenuText-selected");
-                        selectedPrimaryMenuOption = lbl;
-                        moduleKey = module.getModuleKey();
-                        BLCMain.setCurrentModuleKey(moduleKey);
-                        buildSecondaryMenu(null);
-                        AppController.getInstance().go(canvas, module.getPages(), null, false);
+                        BLCMain.setCurrentModuleKey(module.getModuleKey());                     
+                        buildSecondaryMenu(null, module.getModuleKey());
+                        AppController.getInstance().go(canvas, module.getPages(), null, module.getModuleKey(), false);
 	                 }
                 }
 	        }
@@ -307,14 +357,22 @@ public class MasterView extends VLayout {
                         lbl.setBaseStyle("secondaryMenuText-selected");
                         selectedSecondaryMenuOption = lbl;
                         BLCMain.setCurrentPageKey(lbl.getTitle());
-                        History.newItem("moduleKey="+moduleKey+"&pageKey="+lbl.getTitle());
+                        buildHistoryNewItem(lbl.getTitle(), BLCLaunch.getSelectedModule(History.getToken()), null);
                     }
                 }
             }
         });
 
-
         return tmp;
+    }
+    
+    private void buildHistoryNewItem(String pageKey, String moduleKey, String itemId) {
+        String destinationPage = "moduleKey=" + moduleKey +"&pageKey="+pageKey;
+
+        if (itemId != null) {
+            destinationPage = destinationPage + "&itemId="+itemId;
+        }
+        History.newItem(destinationPage);
     }
 
 
@@ -362,32 +420,115 @@ public class MasterView extends VLayout {
         HLayout userFields = new HLayout();
         userFields.setAlign(Alignment.RIGHT);
         userFields.addMember(buildUserImage());
+        LayoutSpacer sp1 = new LayoutSpacer();
+        sp1.setWidth(8);
+        userFields.addMember(sp1);
 
-        Label userLabel = new Label(SecurityManager.USER.getUserName());
-        userLabel.setBaseStyle("userText");
-        userLabel.setWidth(1);
-        userLabel.setOverflow(Overflow.VISIBLE);
+        //Label userLabel = new Label(SecurityManager.USER.getUserName());
+      //  userLabel.setBaseStyle("userText");
+      //  userLabel.setWidth(1);
+     //   userLabel.setOverflow(Overflow.VISIBLE);
+     //   userFields.addMember(userLabel);
 
-        userFields.addMember(userLabel);
+       //  userFields.addMember(buildLogoutImage());
+        
+        
+        Menu menu = new Menu();  
+        menu.setShowShadow(true);  
+        menu.setShadowDepth(10);  
+        menu.setShowIcons(false);
+        
+        MenuItem logout = new MenuItem("Logout");
+        MenuItem edit = new MenuItem("Edit ...");        
+        MenuItem changePassword = new MenuItem("Change Password ...");
+        
+        menu.setItems(edit, changePassword, logout);
 
-        userFields.addMember(buildLogoutImage());
-        Label logoutLink = new Label("LOGOUT");
-        logoutLink.setCursor(Cursor.POINTER);
-        logoutLink.setShowRollOver(true);
-        logoutLink.setBaseStyle("userLogout");
+        
+        changePassword.addClickHandler(new com.smartgwt.client.widgets.menu.events.ClickHandler() {
+                    @Override
+                    public void onClick(MenuItemClickEvent event) {
+                        final DynamicEntityDataSource userDS = new DynamicEntityDataSource(CeilingEntities.ADMIN_USER);
+                        userDS.buildFields(null, false, new AsyncCallbackAdapter() {
+                            public void onSetupSuccess(DataSource ds) {
+                                AdminUser currentUser = SecurityManager.USER;
+                                Record userRecord = new Record();
+                                userRecord.setAttribute("id", currentUser.getId());                                
+                                userRecord.setAttribute("login", currentUser.getUserName());
+                                userRecord.setAttribute("_type", new String[]{EntityImplementations.ADMIN_USER});
+        
+                                EntityEditDialog ed = new EntityEditDialog();
+        
+                                ed.editRecord("Change Password", userDS, userRecord, new ItemEditedHandler() {
+                                    public void onItemEdited(ItemEdited event) {
+                                        String currentPage = BLCLaunch.getSelectedPage(History.getToken());
+                                        if ("User Management".equals(currentPage)) {
+                                            buildHistoryNewItem(currentPage, BLCLaunch.getSelectedModule(History.getToken()), event.getRecord().getAttribute("id"));
+                                        }
+                                    }
+                                }, new String[]{"password"}, new String[]{}, false);
+                            }
+                        });
+        
+                    }
+                });
 
-
-	    logoutLink.addClickHandler(new ClickHandler() {
+        edit.addClickHandler(new com.smartgwt.client.widgets.menu.events.ClickHandler() {
             @Override
-            public void onClick(ClickEvent event) {
+            public void onClick(MenuItemClickEvent event) {
+                final DynamicEntityDataSource userDS = new DynamicEntityDataSource(CeilingEntities.ADMIN_USER);
+                userDS.buildFields(null, false, new AsyncCallbackAdapter() {
+                    public void onSetupSuccess(DataSource ds) {
+                        AdminUser currentUser = SecurityManager.USER;
+                        Record userRecord = new Record();
+                        userRecord.setAttribute("id", currentUser.getId());
+                        userRecord.setAttribute("name", currentUser.getName());
+                        userRecord.setAttribute("email", currentUser.getEmail());
+                        userRecord.setAttribute("phoneNumber", currentUser.getPhoneNumber());
+                        userRecord.setAttribute("login", currentUser.getUserName());
+                        userRecord.setAttribute("_type", new String[]{EntityImplementations.ADMIN_USER});
+
+                        EntityEditDialog ed = new EntityEditDialog();
+
+                        ed.editRecord("Edit User Information", userDS, userRecord, new ItemEditedHandler() {
+                            public void onItemEdited(ItemEdited event) {
+                                SecurityManager.USER.setPhoneNumber(event.getRecord().getAttribute("phoneNumber"));
+                                SecurityManager.USER.setName(event.getRecord().getAttribute("name"));
+                                SecurityManager.USER.setEmail(event.getRecord().getAttribute("email"));
+                                String currentPage = BLCLaunch.getSelectedPage(History.getToken());
+                                // If we are on the user module, reload the page with the specifically edited item.
+                                if ("User Management".equals(currentPage)) {
+                                    buildHistoryNewItem(currentPage, BLCLaunch.getSelectedModule(History.getToken()), event.getRecord().getAttribute("id"));
+                                }
+                            }
+                        }, null, new String[]{"login", "activeStatusFlag", "password"}, false);
+                    }
+                });
+
+            }
+        });
+
+	    logout.addClickHandler(new com.smartgwt.client.widgets.menu.events.ClickHandler() {
+            @Override
+            public void onClick(MenuItemClickEvent event) {
                 UrlBuilder builder = Window.Location.createUrlBuilder();
                 builder.setPath(BLCMain.webAppContext + "/adminLogout.htm");
+                builder.setHash(null);
                 builder.setParameter("time", String.valueOf(System.currentTimeMillis()));
                 Window.open(builder.buildString(), "_self", null);
             }
         } );
 
-        userFields.addMember(logoutLink);
+        
+        IMenuButton menuButton = new IMenuButton(SecurityManager.USER.getUserName(), menu);          
+        menuButton.setPadding(5);
+        menuButton.setChildrenSnapResizeToGrid(true);
+        menuButton.setOverflow(Overflow.VISIBLE);
+        userFields.addMember(menuButton);
+        
+        LayoutSpacer sp2 = new LayoutSpacer();
+        sp2.setWidth(200);
+        userFields.addMember(sp2);
 
         return userFields;
     }
@@ -425,4 +566,8 @@ public class MasterView extends VLayout {
 	public void clearStatus() {
 		status.setContents("");
 	}
+    
+    public Module lookupModule(String key) {
+        return modules.get(key);
+    }
 }

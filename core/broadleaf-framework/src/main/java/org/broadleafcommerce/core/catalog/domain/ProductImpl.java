@@ -18,16 +18,16 @@ package org.broadleafcommerce.core.catalog.domain;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
+import org.broadleafcommerce.common.util.DateUtil;
 import org.broadleafcommerce.core.media.domain.Media;
 import org.broadleafcommerce.core.media.domain.MediaImpl;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
-import org.broadleafcommerce.presentation.RequiredOverride;
-import org.broadleafcommerce.profile.util.DateUtil;
-import org.broadleafcommerce.profile.vendor.service.type.ContainerShapeType;
-import org.broadleafcommerce.profile.vendor.service.type.ContainerSizeType;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.PopulateToOneFieldsEnum;
+import org.broadleafcommerce.common.presentation.RequiredOverride;
+import org.broadleafcommerce.common.vendor.service.type.ContainerShapeType;
+import org.broadleafcommerce.common.vendor.service.type.ContainerSizeType;
 import org.compass.annotations.Searchable;
 import org.compass.annotations.SearchableId;
 import org.compass.annotations.SearchableProperty;
@@ -79,7 +79,7 @@ public class ProductImpl implements Product {
     @GeneratedValue(generator= "ProductId")
     @GenericGenerator(
         name="ProductId",
-        strategy="org.broadleafcommerce.persistence.IdOverrideTableGenerator",
+        strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",
         parameters = {
             @Parameter(name="table_name", value="SEQUENCE_GENERATOR"),
             @Parameter(name="segment_column_name", value="ID_NAME"),
@@ -108,6 +108,7 @@ public class ProductImpl implements Product {
 
     /** The long description. */
     @Lob
+    @Type(type = "org.hibernate.type.StringClobType")
     @Column(name = "LONG_DESCRIPTION")
     @SearchableProperty(name="productDescription")
     @AdminPresentation(friendlyName="Product Long Description", order=3, group="Product Description", prominent=false, largeEntry=true, groupOrder=1)
@@ -326,11 +327,11 @@ public class ProductImpl implements Product {
      */
     public boolean isActive() {
         if (LOG.isDebugEnabled()) {
-            if (!DateUtil.isActive(getActiveStartDate(), getActiveEndDate(), false)) {
+            if (!DateUtil.isActive(getActiveStartDate(), getActiveEndDate(), true)) {
                 LOG.debug("product, " + id + ", inactive due to date");
             }
         }
-        return DateUtil.isActive(getActiveStartDate(), getActiveEndDate(), false);
+        return DateUtil.isActive(getActiveStartDate(), getActiveEndDate(), true);
     }
     
     public String getModel() {

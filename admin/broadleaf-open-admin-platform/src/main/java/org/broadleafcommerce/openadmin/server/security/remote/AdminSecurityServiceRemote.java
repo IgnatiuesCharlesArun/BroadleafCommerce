@@ -35,7 +35,19 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 /**
- * 
+ * Service for handeling security with Ajax components.  Serves two functions.
+ * <ul>
+ *     <li>
+ *         Converts the ServerSide AdminUser to a client level admin user with
+ *         appropriate roles defined.
+ *     </li>
+ *     <li>
+ *         Provides a method to check if the current logged in user matches the
+ *         client side user and verifies whether that user has access to the
+ *         entity operation they are trying to perform.
+ *     </li>
+ * </ul>
+ * 1.
  * @author jfischer
  *
  */
@@ -62,8 +74,15 @@ public class AdminSecurityServiceRemote implements AdminSecurityService  {
                     response.getPermissions().add(permission.getName());
                 }
             }
+            for (AdminPermission permission : persistentAdminUser.getAllPermissions()) {
+                response.getPermissions().add(permission.getName());
+            }
             response.setUserName(persistentAdminUser.getLogin());
             response.setCurrentSandBoxId(String.valueOf(SandBoxContext.getSandBoxContext().getSandBoxId()));
+            response.setEmail(persistentAdminUser.getEmail());
+            response.setName(persistentAdminUser.getName());
+            response.setPhoneNumber(persistentAdminUser.getPhoneNumber());
+            response.setId(persistentAdminUser.getId());
             return response;
         }
 
@@ -76,9 +95,8 @@ public class AdminSecurityServiceRemote implements AdminSecurityService  {
             Authentication auth = ctx.getAuthentication();
             if (auth != null && !auth.getName().equals(ANONYMOUS_USER_NAME)) {
                 User temp = (User) auth.getPrincipal();
-                AdminUser adminUser = securityService.readAdminUserByUserName(temp.getUsername());
 
-                return adminUser;
+                return securityService.readAdminUserByUserName(temp.getUsername());
             }
         }
 
@@ -114,7 +132,7 @@ public class AdminSecurityServiceRemote implements AdminSecurityService  {
         boolean isQualified = securityService.isUserQualifiedForOperationOnCeilingEntity(persistentAdminUser, permissionType, ceilingEntityFullyQualifiedName);
         if (!isQualified){
             //If explicit security, then this check failed. However, if not explicit security, then check to make sure there is no configured security for this entity before allowing to pass
-            if (isEntitySecurityExplicit || securityService.doesOperationExistForCeilingEntity(permissionType, ceilingEntityFullyQualifiedName)) {
+            if (isEntitySecurityExplicit() || securityService.doesOperationExistForCeilingEntity(permissionType, ceilingEntityFullyQualifiedName)) {
                 throw new ServiceException("Security Check Failed for entity operation: " + operationType.toString() + " (" + ceilingEntityFullyQualifiedName + ")");
             }
         }

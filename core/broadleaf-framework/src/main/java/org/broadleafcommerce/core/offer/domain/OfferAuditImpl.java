@@ -22,17 +22,15 @@ import java.sql.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.TableGenerator;
 
 import org.broadleafcommerce.core.offer.service.type.OfferDiscountType;
-import org.broadleafcommerce.money.Money;
+import org.broadleafcommerce.common.money.Money;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.Parameter;
@@ -48,7 +46,7 @@ public class OfferAuditImpl implements OfferAudit {
     @GeneratedValue(generator= "OfferAuditId")
     @GenericGenerator(
         name="OfferAuditId",
-        strategy="org.broadleafcommerce.persistence.IdOverrideTableGenerator",
+        strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",
         parameters = {
             @Parameter(name="table_name", value="SEQUENCE_GENERATOR"),
             @Parameter(name="segment_column_name", value="ID_NAME"),

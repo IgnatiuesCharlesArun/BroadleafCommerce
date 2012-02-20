@@ -16,13 +16,12 @@
 
 package org.broadleafcommerce.cms.structure.domain;
 
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -44,7 +43,6 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "BLC_SC_ITEM_CRITERIA")
 @Inheritance(strategy=InheritanceType.JOINED)
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region="blCMSElements")
 @AdminPresentationClass(friendlyName = "baseStructuredContentItemCriteria")
 public class StructuredContentItemCriteriaImpl implements StructuredContentItemCriteria {
 	
@@ -54,7 +52,7 @@ public class StructuredContentItemCriteriaImpl implements StructuredContentItemC
     @GeneratedValue(generator= "SCItemCriteriaId")
     @GenericGenerator(
         name="SCItemCriteriaId",
-        strategy="org.broadleafcommerce.persistence.IdOverrideTableGenerator",
+        strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",
         parameters = {
             @Parameter(name="table_name", value="SEQUENCE_GENERATOR"),
             @Parameter(name="segment_column_name", value="ID_NAME"),
@@ -73,12 +71,13 @@ public class StructuredContentItemCriteriaImpl implements StructuredContentItemC
 	protected Integer quantity;
     
     @Lob
+    @Type(type = "org.hibernate.type.StringClobType")
     @Column(name = "ORDER_ITEM_MATCH_RULE")
     @AdminPresentation(friendlyName="Order Item Match Rule", group="Description", visibility = VisibilityEnum.HIDDEN_ALL)
 	protected String orderItemMatchRule;
     
     @ManyToOne(targetEntity = StructuredContentImpl.class)
-    @JoinTable(name = "BLC_QUAL_CRIT_SC_XREF", joinColumns = @JoinColumn(name = "SC_ITEM_CRITERIA_ID"), inverseJoinColumns = @JoinColumn(name = "ID"))
+    @JoinTable(name = "BLC_QUAL_CRIT_SC_XREF", joinColumns = @JoinColumn(name = "SC_ITEM_CRITERIA_ID"), inverseJoinColumns = @JoinColumn(name = "SC_ID"))
     protected StructuredContent structuredContent;
 
 	/* (non-Javadoc)

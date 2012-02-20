@@ -26,6 +26,7 @@ import com.google.gwt.user.client.Window;
 import com.smartgwt.client.widgets.Canvas;
 import org.broadleafcommerce.openadmin.client.BLCLaunch;
 import org.broadleafcommerce.openadmin.client.BLCMain;
+import org.broadleafcommerce.openadmin.client.Module;
 import org.broadleafcommerce.openadmin.client.presenter.entity.EntityPresenter;
 import org.broadleafcommerce.openadmin.client.reflection.AsyncClient;
 import org.broadleafcommerce.openadmin.client.security.AdminUser;
@@ -33,7 +34,6 @@ import org.broadleafcommerce.openadmin.client.security.SecurityManager;
 import org.broadleafcommerce.openadmin.client.service.AbstractCallback;
 import org.broadleafcommerce.openadmin.client.service.AppServices;
 import org.broadleafcommerce.openadmin.client.view.Display;
-import org.broadleafcommerce.openadmin.client.view.MasterView;
 import org.broadleafcommerce.openadmin.client.view.UIFactory;
 
 import java.util.HashMap;
@@ -66,31 +66,45 @@ public class AppController implements ValueChangeHandler<String> {
 	private void bind() {
 		History.addValueChangeHandler(this);
 	}
+    
+    private void buildHistoryNewItem(String pageKey, String moduleKey) {
+        String token = History.getToken();
+        String destinationPage = "moduleKey="+ moduleKey+"&pageKey="+pageKey;
+        if (BLCLaunch.getDefaultItem(token) != null) {
+            destinationPage = destinationPage + "&itemId="+BLCLaunch.getDefaultItem(token);
+        }
+        History.newItem(destinationPage);
+    }
 
-	public void go(final Canvas container, HashMap<String, String[]> pages, String pageKey, boolean firstTime) {
+    public void clearCurrentView() {
+        uiFactory.clearCurrentView();
+    }
+
+	public void go(final Canvas container, HashMap<String, String[]> pages, String pageKey, String moduleKey, boolean firstTime) {
 		this.pages = pages;
 		this.container = container;
 
         if (firstTime) {
             String token = History.getToken();
-            if (pageKey.equals(BLCLaunch.getSelectedPage(token)) && MasterView.moduleKey.equals(BLCLaunch.getSelectedModule(token))) {
-                showView(pages.get(pageKey)[0], pages.get(pageKey)[1]);
+            if (pageKey.equals(BLCLaunch.getSelectedPage(token)) && moduleKey.equals(BLCLaunch.getSelectedModule(token))) {
+                String itemId = BLCLaunch.getDefaultItem(token);
+                showView(pages.get(pageKey)[0], pages.get(pageKey)[1], itemId);
             } else {
-                History.newItem("moduleKey="+ MasterView.moduleKey+"&pageKey="+pageKey);
+                buildHistoryNewItem(pageKey, moduleKey);
             }
             return;
         }
 
         if (pageKey != null && pages.get(pageKey) != null) {
             if (SecurityManager.getInstance().isUserAuthorizedToViewSection(pages.get(pageKey)[0])) {
-                History.newItem("moduleKey="+ MasterView.moduleKey+"&pageKey="+pageKey);
+                buildHistoryNewItem(pageKey, moduleKey);
                 return;
             }
         }
 
         for (String sectionTitle : pages.keySet()){
 	        if (SecurityManager.getInstance().isUserAuthorizedToViewSection(pages.get(sectionTitle)[0])){
-			    History.newItem("moduleKey="+ MasterView.moduleKey+"&pageKey="+sectionTitle);
+                buildHistoryNewItem(sectionTitle, moduleKey);
 			    break;
 	    	}
 		}
@@ -105,31 +119,34 @@ public class AppController implements ValueChangeHandler<String> {
 
         if (token != null) {
             String page = BLCLaunch.getSelectedPage(token);
+            String moduleName = BLCLaunch.getSelectedModule(token);
+            String itemId = BLCLaunch.getDefaultItem(token);
 
-            if (page != null) {
-                if (!uiFactory.equalsCurrentView(page)) {
-                    String[] vals = pages.get(page);
+            if (page != null && moduleName != null) {
+                if (!uiFactory.equalsCurrentView(page) || itemId != null) {
+                    Module module = BLCMain.getModule(moduleName);                    
+                    String[] vals = module.getPages().get(page);
                     if (vals != null) {
-                        showView(vals[0], vals[1]);
+                        showView(vals[0], vals[1], itemId);
                     }
                 }
             }
         }
 	}
 
-	protected void showView(final String viewKey, final String presenterKey) {
+	protected void showView(final String viewKey, final String presenterKey, final String itemId) {
         if (!BLCMain.ISNEW) {
             BLCMain.MODAL_PROGRESS.startProgress(new Timer() {
                 public void run() {
-                    setupView(viewKey, presenterKey);
+                    setupView(viewKey, presenterKey, itemId);
                 }
             });
         } else {
-            setupView(viewKey, presenterKey);
+            setupView(viewKey, presenterKey, itemId);
         }
 	}
 
-    protected void setupView(final String viewKey, final String presenterKey) {
+    protected void setupView(final String viewKey, final String presenterKey, final String itemId) {
         AppServices.SECURITY.getAdminUser(new AbstractCallback<AdminUser>() {
             @Override
             public void onSuccess(AdminUser result) {
@@ -149,6 +166,7 @@ public class AppController implements ValueChangeHandler<String> {
                                     @Override
                                     public void onSuccess(Object instance) {
                                         EntityPresenter presenter = (EntityPresenter) instance;
+                                        presenter.setDefaultItemId(itemId);
                                         presenter.setDisplay(view);
                                         presenter.setEventBus(eventBus);
                                         BLCMain.currentViewKey = viewKey;

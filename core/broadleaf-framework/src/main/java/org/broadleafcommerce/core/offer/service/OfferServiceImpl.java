@@ -16,12 +16,7 @@
 
 package org.broadleafcommerce.core.offer.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.annotation.Resource;
-
+import org.broadleafcommerce.common.time.SystemTime;
 import org.broadleafcommerce.core.offer.dao.CustomerOfferDao;
 import org.broadleafcommerce.core.offer.dao.OfferCodeDao;
 import org.broadleafcommerce.core.offer.dao.OfferDao;
@@ -39,9 +34,13 @@ import org.broadleafcommerce.core.offer.service.processor.OrderOfferProcessor;
 import org.broadleafcommerce.core.offer.service.type.OfferType;
 import org.broadleafcommerce.core.order.domain.Order;
 import org.broadleafcommerce.core.pricing.service.exception.PricingException;
-import org.broadleafcommerce.openadmin.time.SystemTime;
 import org.broadleafcommerce.profile.core.domain.Customer;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * The Class OfferServiceImpl.
@@ -234,6 +233,10 @@ public class OfferServiceImpl implements OfferService {
             if ((qualifiedItemOffers.isEmpty()) && (qualifiedOrderOffers.isEmpty())) {
                 orderOfferProcessor.compileOrderTotal(promotableOrder);
             } else {
+                // At this point, we should have a PromotableOrder that contains PromotableItems each of which
+                // has a list of candidatePromotions that might be applied.
+
+                // We also have a list of orderOffers that might apply and a list of itemOffers that might apply.
                 itemOfferProcessor.applyAndCompareOrderAndItemOffers(promotableOrder, qualifiedOrderOffers, qualifiedItemOffers);
                 itemOfferProcessor.gatherCart(promotableOrder);
             }

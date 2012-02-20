@@ -34,7 +34,7 @@ import org.broadleafcommerce.core.order.domain.FulfillmentGroupImpl;
 import org.broadleafcommerce.core.order.domain.OrderImpl;
 import org.broadleafcommerce.core.order.domain.OrderItem;
 import org.broadleafcommerce.core.order.service.type.FulfillmentGroupType;
-import org.broadleafcommerce.money.Money;
+import org.broadleafcommerce.common.money.Money;
 import org.broadleafcommerce.test.BaseTest;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
@@ -109,7 +109,7 @@ public class MVELTest extends BaseTest {
     public void testBasicMVELFunctions() {
         //First, set up out functions
         HashMap<String, Object> functionMap = new HashMap<String, Object>();
-        StringBuffer functions = new StringBuffer("def any(x, y) { System.out.println(fg); return x or y } def all(x, y) { return x and y } ");
+        StringBuffer functions = new StringBuffer("def any(x, y) { return x or y } def all(x, y) { return x and y } ");
         MVEL.eval(functions.toString(), functionMap); //This stores that functions in the map we pass in.
 
         HashMap<String, Object> vars = new HashMap<String, Object>(functionMap); //Now, we need to pass the functions in to our variable map

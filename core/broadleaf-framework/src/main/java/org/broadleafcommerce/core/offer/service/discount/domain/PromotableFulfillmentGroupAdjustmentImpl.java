@@ -22,7 +22,7 @@ import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustment;
 import org.broadleafcommerce.core.offer.domain.Offer;
 import org.broadleafcommerce.core.offer.service.type.OfferDiscountType;
 import org.broadleafcommerce.core.order.domain.FulfillmentGroup;
-import org.broadleafcommerce.money.Money;
+import org.broadleafcommerce.common.money.Money;
 
 public class PromotableFulfillmentGroupAdjustmentImpl implements PromotableFulfillmentGroupAdjustment {
 
@@ -108,7 +108,7 @@ public class PromotableFulfillmentGroupAdjustmentImpl implements PromotableFulfi
 	}
 
 	public Money getValue() {
-		if (delegate.getValue() == null) {
+		if (delegate.getValue() == null || delegate.getValue().equals(Money.ZERO)) {
             computeAdjustmentValue();
         }
 		return delegate.getValue();

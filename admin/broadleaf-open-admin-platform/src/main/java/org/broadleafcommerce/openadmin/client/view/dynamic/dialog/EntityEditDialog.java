@@ -16,6 +16,8 @@
 
 package org.broadleafcommerce.openadmin.client.view.dynamic.dialog;
 
+import java.util.Map;
+
 import com.smartgwt.client.data.DSCallback;
 import com.smartgwt.client.data.DSRequest;
 import com.smartgwt.client.data.DSResponse;
@@ -44,8 +46,6 @@ import org.broadleafcommerce.openadmin.client.callback.ItemEditedHandler;
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.DynamicEntityDataSource;
 import org.broadleafcommerce.openadmin.client.view.dynamic.form.FormBuilder;
 
-import java.util.Map;
-
 /**
  * 
  * @author jfischer
@@ -62,6 +62,7 @@ public class EntityEditDialog extends Window {
     protected VLayout vLayout;
     protected Boolean isHidden = true;
     protected VStack previewContainer;
+    protected IButton saveButton;
 
 	public EntityEditDialog() {
 		this.setIsModal(true);
@@ -94,7 +95,7 @@ public class EntityEditDialog extends Window {
 
         addItem(hStack);
 
-        IButton saveButton = new IButton("Save");
+        saveButton = new IButton("Save");
         saveButton.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
             	if (dynamicForm.validate()) {
@@ -160,9 +161,11 @@ public class EntityEditDialog extends Window {
 		} else {
 			this.setTitle("Add new entity: " + dataSource.getPolymorphicEntities().get(dataSource.getDefaultNewEntityFullyQualifiedClassname()));
 		}
-		buildFields(dataSource, dynamicForm);
+		buildFields(dataSource, dynamicForm, null);
         dynamicForm.editNewRecord(initialValues);
 		show();
+        redraw();
+        saveButton.setVisible(true);
         setHeight(20);
         int formHeight = hStack.getScrollHeight() + vLayout.getScrollHeight() + 30;
         if (formHeight > 600) {
@@ -174,6 +177,8 @@ public class EntityEditDialog extends Window {
         int formWidth = hStack.getScrollWidth() + 30;
         if (formWidth > 800) {
             setWidth(800);
+        } else if (formWidth < 400) {
+            setWidth(400);
         } else {
             setWidth(formWidth);
         }
@@ -218,7 +223,7 @@ public class EntityEditDialog extends Window {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public void editRecord(String title, DynamicEntityDataSource dataSource, Record record, ItemEditedHandler handler, String[] fieldNames, String[] ignoreFields) {
+	public void editRecord(String title, DynamicEntityDataSource dataSource, Record record, ItemEditedHandler handler, String[] fieldNames, String[] ignoreFields, boolean readOnly) {
         pictureStack.setVisible(false);
         if (showMedia && mediaField != null) {
             updateMedia(record.getAttribute(mediaField));
@@ -239,11 +244,13 @@ public class EntityEditDialog extends Window {
 		} else {
 			this.setTitle("Edit entity: " + dataSource.getPolymorphicEntities().get(dataSource.getDefaultNewEntityFullyQualifiedClassname()));
 		}
-		buildFields(dataSource, dynamicForm);
+		buildFields(dataSource, dynamicForm, record);
         dynamicForm.editRecord(record);
         centerInPage();
 		setTop(70);
 		show();
+        redraw();
+        saveButton.setVisible(!readOnly);
         setHeight(20);
         int formHeight = hStack.getScrollHeight() + vLayout.getScrollHeight() + 30;
         if (formHeight > 600) {
@@ -255,14 +262,16 @@ public class EntityEditDialog extends Window {
         int formWidth = hStack.getScrollWidth() + 30;
         if (formWidth > 800) {
             setWidth(800);
+        } else if (formWidth < 400) {
+            setWidth(400);
         } else {
             setWidth(formWidth);
         }
         isHidden = false;
 	}
 	
-	protected void buildFields(DataSource dataSource, DynamicForm dynamicForm) {
-		FormBuilder.buildForm(dataSource, dynamicForm, false);
+	protected void buildFields(DataSource dataSource, DynamicForm dynamicForm, Record record) {
+		FormBuilder.buildForm(dataSource, dynamicForm, false, record);
 	}
 
     public boolean isShowMedia() {

@@ -27,7 +27,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.broadleafcommerce.openadmin.server.dao.DynamicEntityDao;
-import org.broadleafcommerce.persistence.EntityConfiguration;
+import org.broadleafcommerce.common.persistence.EntityConfiguration;
 import org.hibernate.mapping.PersistentClass;
 
 /**
@@ -74,7 +74,12 @@ public class FieldManager {
                     String peekAheadToken = tokens[j+1];
                     List<Class<?>> matchedClasses = new ArrayList<Class<?>>();
                     for (Class<?> entity : entities) {
-                        Field peekAheadField = getSingleField(entity, peekAheadToken);
+                        Field peekAheadField = null;
+                        try {
+                            peekAheadField = entity.getDeclaredField(peekAheadToken);
+                        } catch (NoSuchFieldException nsf) {
+                            //do nothing
+                        }
                         if (peekAheadField != null) {
                             matchedClasses.add(entity);
                         }
@@ -82,8 +87,8 @@ public class FieldManager {
                     if (matchedClasses.size() > 1) {
                         LOG.warn("Found the property (" + peekAheadToken + ") in more than one class of an inheritance hierarchy. This may lead to unwanted behavior, as the system does not know which class was intended. Do not use the same property name in different levels of the inheritance hierarchy. Defaulting to the first class found (" + matchedClasses.get(0).getName() + ")");
                     }
-                    if (!matchedClasses.isEmpty()) {
-                        Class<?> matchedClass = matchedClasses.get(0);
+                    if (getSingleField(entities[0], peekAheadToken) != null) {
+                        Class<?> matchedClass = entities[0];
                         PersistentClass persistentClass = dynamicEntityDao.getPersistentClass(matchedClass.getName());
                         if (persistentClass != null && matchedClasses.size() == 1) {
                             Class<?> entityClass;
@@ -114,20 +119,25 @@ public class FieldManager {
         return field;
 	}
 	
-	public Object getFieldValue(Object bean, String fieldName) throws IllegalAccessException {
+	public Object getFieldValue(Object bean, String fieldName) throws IllegalAccessException, FieldNotAvailableException {
 		StringTokenizer tokens = new StringTokenizer(fieldName, ".");
         Class<?> componentClass = bean.getClass();
-        Field field = null;
+        Field field;
         Object value = bean;
 
         while (tokens.hasMoreTokens()) {
-            field = getSingleField(componentClass, tokens.nextToken());
-            field.setAccessible(true);
-            value = field.get(value);
-            if (value != null) {
-                componentClass = value.getClass();
+            String token = tokens.nextToken();
+            field = getSingleField(componentClass, token);
+            if (field != null) {
+                field.setAccessible(true);
+                value = field.get(value);
+                if (value != null) {
+                    componentClass = value.getClass();
+                } else {
+                    break;
+                }
             } else {
-            	break;
+                throw new FieldNotAvailableException("Unable to find field (" + token + ") on the class (" + componentClass + ")");
             }
         }
 

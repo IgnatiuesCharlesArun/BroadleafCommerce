@@ -16,6 +16,14 @@
 
 package org.broadleafcommerce.cms.admin.server.handler;
 
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.anasoft.os.daofusion.cto.client.CriteriaTransferObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -30,6 +38,8 @@ import org.broadleafcommerce.cms.page.domain.PageFieldImpl;
 import org.broadleafcommerce.cms.page.domain.PageTemplate;
 import org.broadleafcommerce.cms.page.domain.PageTemplateImpl;
 import org.broadleafcommerce.cms.page.service.PageService;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.broadleafcommerce.openadmin.client.dto.ClassMetadata;
 import org.broadleafcommerce.openadmin.client.dto.ClassTree;
 import org.broadleafcommerce.openadmin.client.dto.DynamicResultSet;
@@ -39,8 +49,6 @@ import org.broadleafcommerce.openadmin.client.dto.FieldPresentationAttributes;
 import org.broadleafcommerce.openadmin.client.dto.MergedPropertyType;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePackage;
 import org.broadleafcommerce.openadmin.client.dto.Property;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
 import org.broadleafcommerce.openadmin.client.service.ServiceException;
 import org.broadleafcommerce.openadmin.server.dao.DynamicEntityDao;
 import org.broadleafcommerce.openadmin.server.domain.SandBox;
@@ -49,14 +57,6 @@ import org.broadleafcommerce.openadmin.server.service.handler.CustomPersistenceH
 import org.broadleafcommerce.openadmin.server.service.persistence.SandBoxService;
 import org.broadleafcommerce.openadmin.server.service.persistence.module.InspectHelper;
 import org.broadleafcommerce.openadmin.server.service.persistence.module.RecordHelper;
-
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by jfischer
@@ -226,7 +226,7 @@ public class PageTemplateCustomPersistenceHandler extends CustomPersistenceHandl
 
             return results;
         } catch (Exception e) {
-            LOG.error(e);
+            LOG.error("Unable to perform inspect for entity: "+ceilingEntityFullyQualifiedClassname, e);
             throw new ServiceException("Unable to perform inspect for entity: "+ceilingEntityFullyQualifiedClassname, e);
         }
     }
@@ -241,7 +241,7 @@ public class PageTemplateCustomPersistenceHandler extends CustomPersistenceHandl
 
             return results;
         } catch (Exception e) {
-            LOG.error(e);
+            LOG.error("Unable to perform fetch for entity: "+ceilingEntityFullyQualifiedClassname, e);
             throw new ServiceException("Unable to perform fetch for entity: "+ceilingEntityFullyQualifiedClassname, e);
         }
     }
@@ -318,8 +318,8 @@ public class PageTemplateCustomPersistenceHandler extends CustomPersistenceHandl
 
             return fetchEntityBasedOnId(pageId);
         } catch (Exception e) {
-            LOG.error(e);
-            throw new ServiceException("Unable to perform fetch for entity: "+ceilingEntityFullyQualifiedClassname, e);
+            LOG.error("Unable to perform update for entity: "+ceilingEntityFullyQualifiedClassname, e);
+            throw new ServiceException("Unable to perform update for entity: "+ceilingEntityFullyQualifiedClassname, e);
         }
     }
 }

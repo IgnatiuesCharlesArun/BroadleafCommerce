@@ -43,6 +43,15 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 
+import org.broadleafcommerce.common.audit.Auditable;
+import org.broadleafcommerce.common.audit.AuditableListener;
+import org.broadleafcommerce.common.money.Money;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverride;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverrides;
+import org.broadleafcommerce.common.presentation.PopulateToOneFieldsEnum;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
 import org.broadleafcommerce.core.offer.domain.CandidateOrderOffer;
 import org.broadleafcommerce.core.offer.domain.CandidateOrderOfferImpl;
 import org.broadleafcommerce.core.offer.domain.Offer;
@@ -56,15 +65,6 @@ import org.broadleafcommerce.core.offer.domain.OrderAdjustmentImpl;
 import org.broadleafcommerce.core.order.service.type.OrderStatus;
 import org.broadleafcommerce.core.payment.domain.PaymentInfo;
 import org.broadleafcommerce.core.payment.domain.PaymentInfoImpl;
-import org.broadleafcommerce.money.Money;
-import org.broadleafcommerce.openadmin.audit.Auditable;
-import org.broadleafcommerce.openadmin.audit.AuditableListener;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.AdminPresentationOverride;
-import org.broadleafcommerce.presentation.AdminPresentationOverrides;
-import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
 import org.broadleafcommerce.profile.core.domain.Customer;
 import org.broadleafcommerce.profile.core.domain.CustomerImpl;
 import org.hibernate.annotations.Cache;
@@ -129,7 +129,7 @@ public class OrderImpl implements Order {
     protected BigDecimal subTotal;
 
     @Column(name = "ORDER_TOTAL", precision=19, scale=5)
-    @AdminPresentation(friendlyName="Order Total", group="Order", order=11, fieldType=SupportedFieldType.MONEY)
+    @AdminPresentation(friendlyName="Order Total", group="Order", order=11, fieldType= SupportedFieldType.MONEY)
     protected BigDecimal total;
 
     @Column(name = "SUBMIT_DATE")

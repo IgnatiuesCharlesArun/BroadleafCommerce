@@ -20,9 +20,12 @@ import com.anasoft.os.daofusion.criteria.AssociationPath;
 import com.anasoft.os.daofusion.cto.server.FilterAndSortMapping;
 import com.anasoft.os.daofusion.cto.server.FilterValueConverter;
 import com.anasoft.os.daofusion.cto.server.NestedPropertyCriteriaBasedConverter;
+import com.anasoft.os.daofusion.cto.server.NestedPropertyMapping;
 import com.anasoft.os.daofusion.util.FilterValueConverters;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -69,6 +72,46 @@ public class BaseCtoConverter extends NestedPropertyCriteriaBasedConverter {
             return stringValue.charAt(0);
         }
     };
+
+    public static class NullAwareDateConverter implements FilterValueConverter<Date> {
+
+        private final String dateFormatPattern;
+
+        /**
+         * Creates a new converter.
+         *
+         * @param dateFormatPattern Pattern describing the date format.
+         */
+        public NullAwareDateConverter(String dateFormatPattern) {
+            this.dateFormatPattern = dateFormatPattern;
+        }
+
+        /**
+         * @return Pattern describing the date format.
+         */
+        public String getDateFormatPattern() {
+            return dateFormatPattern;
+        }
+
+        /**
+         * @see com.anasoft.os.daofusion.cto.server.FilterValueConverter#convert(java.lang.String)
+         */
+        public Date convert(String stringValue) {
+            return parseDate(stringValue, dateFormatPattern);
+        }
+
+        public Date parseDate(String value, String dateFormatPattern) {
+            if (value == null) {
+                return null;
+            }
+            try {
+                return new SimpleDateFormat(dateFormatPattern).parse(value);
+            } catch (ParseException e) {
+                throw new RuntimeException("Error while converting '" + value + "' into Date using pattern " + dateFormatPattern, e);
+            }
+        }
+
+    }
     
     public void addStringLikeMapping(String mappingGroupName, String propertyId,
             AssociationPath associationPath, String targetPropertyName) {
@@ -111,6 +154,10 @@ public class BaseCtoConverter extends NestedPropertyCriteriaBasedConverter {
                 propertyId, associationPath, targetPropertyName,
                 FilterCriterionProviders.ISNULL, NULL_AWARE_LONG));
     }
+
+    public void addEmptyMapping(String mappingGroupName, String propertyId) {
+        addMapping(mappingGroupName, new EmptyNestedPropertyMapping(propertyId));
+    }
     
     public void addBooleanMapping(String mappingGroupName, String propertyId,
             AssociationPath associationPath, String targetPropertyName) {
@@ -130,7 +177,7 @@ public class BaseCtoConverter extends NestedPropertyCriteriaBasedConverter {
             AssociationPath associationPath, String targetPropertyName) {
         addMapping(mappingGroupName, new FilterAndSortMapping<Date>(
                 propertyId, associationPath, targetPropertyName,
-                FilterCriterionProviders.BETWEEN, new FilterValueConverters.DateConverter("yyyy-MM-dd'T'HH:mm:ss")));
+                FilterCriterionProviders.BETWEEN_DATE, new NullAwareDateConverter("yyyy-MM-dd'T'HH:mm:ss")));
     }
     
     public void addCollectionSizeEqMapping(String mappingGroupName, String propertyId,

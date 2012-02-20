@@ -16,11 +16,11 @@
 
 package org.broadleafcommerce.openadmin.server.domain;
 
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.broadleafcommerce.openadmin.audit.AdminAuditable;
 import org.broadleafcommerce.openadmin.audit.AdminAuditableListener;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
-import org.broadleafcommerce.presentation.*;
+import org.broadleafcommerce.common.presentation.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Index;
@@ -35,14 +35,10 @@ import java.util.List;
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region="blSandBoxElements")
 @AdminPresentationOverrides(
         {
-            @AdminPresentationOverride(name="auditable.createdBy.login", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.createdBy.password", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.createdBy.email", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.createdBy.currentSandBox", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.updatedBy.login", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.updatedBy.password", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.updatedBy.email", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.updatedBy.currentSandBox", value=@AdminPresentation(excluded = true)),
+            @AdminPresentationOverride(name="auditable.createdBy.id", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+            @AdminPresentationOverride(name="auditable.updatedBy.id", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+            @AdminPresentationOverride(name="auditable.dateCreated", value=@AdminPresentation(friendlyName="Date Created", group="Audit", readOnly = true)),
+            @AdminPresentationOverride(name="auditable.dateUpdated", value=@AdminPresentation(friendlyName="Date Updated", group="Audit", readOnly = true)),
             @AdminPresentationOverride(name="sandBox.name", value=@AdminPresentation(excluded = true)),
             @AdminPresentationOverride(name="sandBox.author", value=@AdminPresentation(excluded = true)),
             @AdminPresentationOverride(name="sandBox.site", value=@AdminPresentation(excluded = true)),
@@ -67,6 +63,7 @@ public class SandBoxItemImpl implements SandBoxItem {
     protected Long id;
 
     @Embedded
+    @AdminPresentation(excluded = true)
     protected AdminAuditable auditable = new AdminAuditable();
 
     @ManyToOne(targetEntity = SandBoxImpl.class)
@@ -104,7 +101,7 @@ public class SandBoxItemImpl implements SandBoxItem {
     @Column(name = "ARCHIVED_FLAG")
     @AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)
     @Index(name="ARCHIVED_FLAG_INDEX", columnNames={"ARCHIVED_FLAG"})
-    protected Boolean archivedFlag = Boolean.FALSE;
+    protected Character archivedFlag = 'N';
 
     @ManyToMany(targetEntity = SandBoxActionImpl.class, cascade = CascadeType.ALL)
     @JoinTable(
@@ -207,12 +204,20 @@ public class SandBoxItemImpl implements SandBoxItem {
 
     @Override
     public Boolean getArchivedFlag() {
-        return archivedFlag;
-    }
+        if (archivedFlag == null) {
+            return null;
+        } else {
+            return archivedFlag == 'Y' ? Boolean.TRUE : Boolean.FALSE;
+        }
+    }                             
 
     @Override
     public void setArchivedFlag(Boolean archivedFlag) {
-        this.archivedFlag = archivedFlag;
+        if (archivedFlag == null) {
+            this.archivedFlag = null;
+        } else {
+            this.archivedFlag = archivedFlag ? 'Y' : 'N';
+        }
     }
 
     @Override

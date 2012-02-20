@@ -96,5 +96,77 @@ public interface StaticAssetService extends SandBoxItemListener {
 
     public List<StaticAsset> findAssets(SandBox sandbox, Criteria criteria);
 
+    /**
+     * Returns the value configured to mark an item as a static URL.
+     *
+     * OOB BLC maintains this value in common.properties.
+     *
+     * @return
+     */
+    public String getStaticAssetUrlPrefix();
+
+    public void setStaticAssetUrlPrefix(String prefix);
+
+    /**
+     * Returns the value configured for the current environment
+     * for the static asset url prefix.   If this is different than
+     * the common value, then the URLs will get rewritten by the
+     * FieldMapWrapper when called from the DisplayContentTag or
+     * ProcessURLFilter.
+     *
+     * @return
+     */
+    public String getStaticAssetEnvironmentUrlPrefix();
+
+    /**
+     * Returns the secure value of the environment url prefix (e.g. prefixed with https if needed).
+     *
+     * @return
+     */
+    public String getStaticAssetEnvironmentSecureUrlPrefix();
+
+    /**
+     * Sets the environment url prefix.
+     * @param prefix
+     */
+    public void setStaticAssetEnvironmentUrlPrefix(String prefix);
+
+
+    /**
+     * If set to true, then this service will not use the SandBox concept
+     * and will instead automatically promote images to production
+     * as they are entered into the system.
+     *
+     * This is recommended for the best workflow within the BLC-CMS and has
+     * been set as the default behavior.
+     *
+     */
+    public boolean getAutomaticallyApproveAndPromoteStaticAssets();
+
+    /**
+     * If set to true, then this service will not use the SandBox concept
+     * and will instead automatically promote images to production
+     * as they are entered into the system.
+     *
+     * This is recommended for the best workflow within the BLC-CMS and has
+     * been set as the default behavior.
+     *
+     */
+    public void setAutomaticallyApproveAndPromoteStaticAssets(boolean setting);
+
+
+    /**
+     * This method will take in an assetPath (think image url) and convert it if
+     * the value contains the asseturlprefix.
+     * @see StaticAssetService#getStaticAssetUrlPrefix()
+     * @see StaticAssetService#getStaticAssetEnvironmentUrlPrefix()
+     * 
+     * @param assetPath - The path to rewrite if it is a cms managed asset
+     * @param contextPath - The context path of the web application (if applicable)
+     * @param secureRequest - True if the request is being served over https
+     * @return
+     */
+    public String convertAssetPath(String assetPath, String contextPath, boolean secureRequest);
+
 
 }

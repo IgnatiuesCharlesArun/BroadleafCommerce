@@ -16,23 +16,6 @@
 
 package org.broadleafcommerce.cms.file.domain;
 
-import org.broadleafcommerce.openadmin.audit.AdminAuditable;
-import org.broadleafcommerce.openadmin.audit.AdminAuditableListener;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.server.domain.SandBox;
-import org.broadleafcommerce.openadmin.server.domain.SandBoxImpl;
-import org.broadleafcommerce.openadmin.server.domain.Site;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.AdminPresentationOverride;
-import org.broadleafcommerce.presentation.AdminPresentationOverrides;
-import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Index;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -53,6 +36,24 @@ import javax.persistence.Transient;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverride;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverrides;
+import org.broadleafcommerce.common.presentation.PopulateToOneFieldsEnum;
+import org.broadleafcommerce.common.presentation.RequiredOverride;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
+import org.broadleafcommerce.openadmin.audit.AdminAuditable;
+import org.broadleafcommerce.openadmin.audit.AdminAuditableListener;
+import org.broadleafcommerce.openadmin.server.domain.SandBox;
+import org.broadleafcommerce.openadmin.server.domain.SandBoxImpl;
+import org.broadleafcommerce.openadmin.server.domain.Site;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Index;
+
 /**
  * Created by bpolster.
  */
@@ -63,18 +64,12 @@ import java.util.Map;
 @Cache(usage= CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region="blCMSElements")
 @AdminPresentationOverrides(
         {
-            @AdminPresentationOverride(name="auditable.createdBy.name", value=@AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)),
-            @AdminPresentationOverride(name="auditable.updatedBy.name", value=@AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)),
-            @AdminPresentationOverride(name="auditable.dateCreated", value=@AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)),
-            @AdminPresentationOverride(name="auditable.dateUpdated", value=@AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)),
-            @AdminPresentationOverride(name="auditable.createdBy.login", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.createdBy.password", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.createdBy.email", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.createdBy.currentSandBox", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.updatedBy.login", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.updatedBy.password", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.updatedBy.email", value=@AdminPresentation(excluded = true)),
-            @AdminPresentationOverride(name="auditable.updatedBy.currentSandBox", value=@AdminPresentation(excluded = true)),
+            @AdminPresentationOverride(name="auditable.createdBy.id", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+            @AdminPresentationOverride(name="auditable.updatedBy.id", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+            @AdminPresentationOverride(name="auditable.createdBy.name", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+            @AdminPresentationOverride(name="auditable.updatedBy.name", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+            @AdminPresentationOverride(name="auditable.dateCreated", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+            @AdminPresentationOverride(name="auditable.dateUpdated", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
             @AdminPresentationOverride(name="sandbox", value=@AdminPresentation(excluded = true))
         }
 )
@@ -88,10 +83,11 @@ public class StaticAssetImpl implements StaticAsset {
     protected Long id;
 
     @Embedded
+    @AdminPresentation(excluded = true)
     protected AdminAuditable auditable = new AdminAuditable();
 
     @Column (name = "NAME", nullable = false)
-    @AdminPresentation(friendlyName="Item Name", order=1, group = "Details")
+    @AdminPresentation(friendlyName="Item Name", order=1, group = "Details", requiredOverride = RequiredOverride.NOT_REQUIRED)
     protected String name;
 
     /*@ManyToOne(targetEntity = SiteImpl.class)
@@ -101,7 +97,7 @@ public class StaticAssetImpl implements StaticAsset {
     protected Site site;
 
     @Column(name ="FULL_URL", nullable = false)
-    @AdminPresentation(friendlyName="Full URL", order=2, group = "Details")
+    @AdminPresentation(friendlyName="Full URL", order=2, group = "Details", requiredOverride = RequiredOverride.NOT_REQUIRED)
     @Index(name="ASST_FULL_URL_INDX", columnNames={"FULL_URL"})
     protected String fullUrl;
 
@@ -118,7 +114,7 @@ public class StaticAssetImpl implements StaticAsset {
     protected String fileExtension;
 
     @ManyToMany(targetEntity = StaticAssetDescriptionImpl.class, cascade = CascadeType.ALL)
-    @JoinTable(name = "BLC_ASSET_DESC_MAP", inverseJoinColumns = @JoinColumn(name = "STATIC_ASSET_DESC_ID", referencedColumnName = "STATIC_ASSET_DESC_ID"))
+    @JoinTable(name = "BLC_ASSET_DESC_MAP", joinColumns = @JoinColumn(name = "STATIC_ASSET_ID"), inverseJoinColumns = @JoinColumn(name = "STATIC_ASSET_DESC_ID"))
     @org.hibernate.annotations.MapKey(columns = {@Column(name = "MAP_KEY", nullable = false)})
     @Cascade(value={org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region="blCMSElements")

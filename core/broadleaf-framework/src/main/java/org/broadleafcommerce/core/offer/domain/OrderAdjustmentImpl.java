@@ -18,12 +18,12 @@ package org.broadleafcommerce.core.offer.domain;
 
 import org.broadleafcommerce.core.order.domain.Order;
 import org.broadleafcommerce.core.order.domain.OrderImpl;
-import org.broadleafcommerce.money.Money;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.AdminPresentationOverride;
-import org.broadleafcommerce.presentation.AdminPresentationOverrides;
-import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
+import org.broadleafcommerce.common.money.Money;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverride;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverrides;
+import org.broadleafcommerce.common.presentation.PopulateToOneFieldsEnum;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
@@ -80,7 +80,7 @@ public class OrderAdjustmentImpl implements OrderAdjustment {
     @GeneratedValue(generator= "OrderAdjustmentId")
     @GenericGenerator(
         name="OrderAdjustmentId",
-        strategy="org.broadleafcommerce.persistence.IdOverrideTableGenerator",
+        strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",
         parameters = {
             @Parameter(name="table_name", value="SEQUENCE_GENERATOR"),
             @Parameter(name="segment_column_name", value="ID_NAME"),
@@ -110,7 +110,7 @@ public class OrderAdjustmentImpl implements OrderAdjustment {
 
     @Column(name = "ADJUSTMENT_VALUE", nullable=false)
     @AdminPresentation(friendlyName="Order Adjustment Value", order=2, group="Description")
-    protected BigDecimal value;
+    protected BigDecimal value = Money.ZERO.getAmount();
 
     public void init(Order order, Offer offer, String reason){
         this.order = order;

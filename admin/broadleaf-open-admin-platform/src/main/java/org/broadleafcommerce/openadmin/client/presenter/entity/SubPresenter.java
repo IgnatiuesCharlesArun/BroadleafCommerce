@@ -16,6 +16,8 @@
 
 package org.broadleafcommerce.openadmin.client.presenter.entity;
 
+import java.util.Arrays;
+
 import com.smartgwt.client.data.DSCallback;
 import com.smartgwt.client.data.DSRequest;
 import com.smartgwt.client.data.DSResponse;
@@ -30,8 +32,6 @@ import org.broadleafcommerce.openadmin.client.datasource.dynamic.ListGridDataSou
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.PresentationLayerAssociatedDataSource;
 import org.broadleafcommerce.openadmin.client.dto.ClassTree;
 import org.broadleafcommerce.openadmin.client.view.dynamic.SubItemDisplay;
-
-import java.util.Arrays;
 
 /**
  * 
@@ -77,7 +77,7 @@ public class SubPresenter extends DynamicFormPresenter implements SubPresentable
 		display.getGrid().setDataSource(dataSource);
 		dataSource.setAssociatedGrid(display.getGrid());
 		dataSource.setupGridFields(gridFields, editable);
-		display.getFormOnlyDisplay().buildFields(dataSource, true, false, false);
+		display.getFormOnlyDisplay().buildFields(dataSource, true, false, false, null);
 	}
 	
 	@Override
@@ -118,8 +118,14 @@ public class SubPresenter extends DynamicFormPresenter implements SubPresentable
 			enable();
 		}
 	}
-	
-	public boolean load(Record associatedRecord, AbstractDynamicDataSource abstractDynamicDataSource, final DSCallback cb) {
+
+    @Override
+    public boolean load(Record associatedRecord, AbstractDynamicDataSource associatedDataSource) {
+        return load(associatedRecord, associatedDataSource, null);
+    }
+
+    @Override
+    public boolean load(Record associatedRecord, AbstractDynamicDataSource abstractDynamicDataSource, final DSCallback cb) {
 		this.associatedRecord = associatedRecord;
 		this.abstractDynamicDataSource = abstractDynamicDataSource;
         ClassTree classTree = abstractDynamicDataSource.getPolymorphicEntityTree();
@@ -168,7 +174,7 @@ public class SubPresenter extends DynamicFormPresenter implements SubPresentable
 				if (event.getState()) {
 					display.getRemoveButton().enable();
 					((DynamicEntityDataSource) display.getGrid().getDataSource()).resetPermanentFieldVisibilityBasedOnType(event.getSelectedRecord().getAttributeAsStringArray("_type"));
-					display.getFormOnlyDisplay().buildFields(display.getGrid().getDataSource(),showDisabledState, canEdit, showId);
+					display.getFormOnlyDisplay().buildFields(display.getGrid().getDataSource(),showDisabledState, canEdit, showId, event.getRecord());
 					display.getFormOnlyDisplay().getForm().editRecord(event.getRecord());
 					display.getFormOnlyDisplay().getForm().enable();
 				} else {

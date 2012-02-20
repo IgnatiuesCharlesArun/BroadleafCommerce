@@ -31,20 +31,20 @@ import org.broadleafcommerce.cms.structure.domain.StructuredContentType;
 import org.broadleafcommerce.cms.structure.domain.StructuredContentTypeImpl;
 import org.broadleafcommerce.cms.structure.service.StructuredContentService;
 import org.broadleafcommerce.cms.structure.service.type.StructuredContentRuleType;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.broadleafcommerce.openadmin.client.dto.ClassMetadata;
 import org.broadleafcommerce.openadmin.client.dto.DynamicResultSet;
 import org.broadleafcommerce.openadmin.client.dto.Entity;
 import org.broadleafcommerce.openadmin.client.dto.FieldMetadata;
 import org.broadleafcommerce.openadmin.client.dto.FieldPresentationAttributes;
 import org.broadleafcommerce.openadmin.client.dto.ForeignKey;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
 import org.broadleafcommerce.openadmin.client.dto.MergedPropertyType;
 import org.broadleafcommerce.openadmin.client.dto.OperationType;
 import org.broadleafcommerce.openadmin.client.dto.OperationTypes;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePackage;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePerspective;
 import org.broadleafcommerce.openadmin.client.dto.Property;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
 import org.broadleafcommerce.openadmin.client.service.ServiceException;
 import org.broadleafcommerce.openadmin.server.cto.BaseCtoConverter;
 import org.broadleafcommerce.openadmin.server.dao.DynamicEntityDao;
@@ -55,7 +55,7 @@ import org.broadleafcommerce.openadmin.server.service.persistence.PersistenceMan
 import org.broadleafcommerce.openadmin.server.service.persistence.SandBoxService;
 import org.broadleafcommerce.openadmin.server.service.persistence.module.InspectHelper;
 import org.broadleafcommerce.openadmin.server.service.persistence.module.RecordHelper;
-import org.broadleafcommerce.persistence.EntityConfiguration;
+import org.broadleafcommerce.common.persistence.EntityConfiguration;
 import org.hibernate.Criteria;
 import org.hibernate.tool.hbm2x.StringUtils;
 
@@ -462,6 +462,9 @@ public class StructuredContentCustomPersistenceHandler extends CustomPersistence
     protected void addRule(Entity entity, StructuredContent structuredContentInstance, String propertyName, StructuredContentRuleType type) {
 		Property ruleProperty = entity.findProperty(propertyName);
 		if (ruleProperty != null && !StringUtils.isEmpty(ruleProperty.getValue())) {
+            //antisamy XSS protection encodes the values in the MVEL
+            //reverse this behavior
+            ruleProperty.setValue(ruleProperty.getUnHtmlEncodedValue());
 			StructuredContentRule rule = (StructuredContentRule) entityConfiguration.createEntityInstance(StructuredContentRule.class.getName());
 			rule.setMatchRule(ruleProperty.getValue());
 			structuredContentInstance.getStructuredContentMatchRules().put(type.getType(), rule);
@@ -471,6 +474,9 @@ public class StructuredContentCustomPersistenceHandler extends CustomPersistence
 	protected void updateRule(Entity entity, StructuredContent structuredContentInstance, String propertyName, StructuredContentRuleType type) {
 		Property ruleProperty = entity.findProperty(propertyName);
 		if (ruleProperty != null && !StringUtils.isEmpty(ruleProperty.getValue())) {
+            //antisamy XSS protection encodes the values in the MVEL
+            //reverse this behavior
+            ruleProperty.setValue(ruleProperty.getUnHtmlEncodedValue());
 			StructuredContentRule rule = structuredContentInstance.getStructuredContentMatchRules().get(type.getType());
 			if (rule == null) {
 				rule = (StructuredContentRule) entityConfiguration.createEntityInstance(StructuredContentRule.class.getName());

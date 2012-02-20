@@ -38,20 +38,20 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 
+import org.broadleafcommerce.common.money.Money;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverride;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverrides;
+import org.broadleafcommerce.common.presentation.PopulateToOneFieldsEnum;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.broadleafcommerce.core.offer.domain.CandidateFulfillmentGroupOffer;
 import org.broadleafcommerce.core.offer.domain.CandidateFulfillmentGroupOfferImpl;
 import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustment;
 import org.broadleafcommerce.core.offer.domain.FulfillmentGroupAdjustmentImpl;
 import org.broadleafcommerce.core.order.service.type.FulfillmentGroupStatusType;
 import org.broadleafcommerce.core.order.service.type.FulfillmentGroupType;
-import org.broadleafcommerce.money.Money;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.AdminPresentationOverride;
-import org.broadleafcommerce.presentation.AdminPresentationOverrides;
-import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
 import org.broadleafcommerce.profile.core.domain.Address;
 import org.broadleafcommerce.profile.core.domain.AddressImpl;
 import org.broadleafcommerce.profile.core.domain.Phone;
@@ -60,6 +60,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Index;
+
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -167,7 +168,7 @@ public class FulfillmentGroupImpl implements FulfillmentGroup {
     protected BigDecimal merchandiseTotal;
 
     @Column(name = "TOTAL", precision=19, scale=5)
-    @AdminPresentation(friendlyName="FG Total", order=11, group="Pricing", fieldType=SupportedFieldType.MONEY)
+    @AdminPresentation(friendlyName="FG Total", order=11, group="Pricing", fieldType= SupportedFieldType.MONEY)
     protected BigDecimal total;
 
     @Column(name = "STATUS")

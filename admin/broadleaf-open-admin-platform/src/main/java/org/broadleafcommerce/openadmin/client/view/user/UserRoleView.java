@@ -31,8 +31,6 @@ import com.smartgwt.client.widgets.toolbar.ToolStripButton;
 import org.broadleafcommerce.openadmin.client.BLCMain;
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.AbstractDynamicDataSource;
 import org.broadleafcommerce.openadmin.client.datasource.dynamic.PresentationLayerAssociatedDataSource;
-import org.broadleafcommerce.openadmin.client.view.dynamic.form.FormOnlyDisplay;
-import org.broadleafcommerce.openadmin.client.view.dynamic.form.FormOnlyView;
 
 /**
  * 
@@ -46,7 +44,6 @@ public class UserRoleView extends VLayout implements UserRoleDisplay {
 	protected ToolStripButton removeButton;
 	protected ListGrid grid;
 	protected ListGrid expansionGrid;
-	protected FormOnlyView orderItemFormDisplay;
 
 	public UserRoleView(Boolean canReorder, Boolean canEdit) {
         setHeight100();
@@ -66,7 +63,6 @@ public class UserRoleView extends VLayout implements UserRoleDisplay {
         stack.setID("userRoleVerticalLayout");
         stack.setHeight100();
         stack.setWidth100();
-        //stack.setLayoutMargin(12);
         
         toolBar = new ToolStrip();
         toolBar.setHeight(30);
@@ -165,10 +161,6 @@ public class UserRoleView extends VLayout implements UserRoleDisplay {
 
 	public ListGrid getExpansionGrid() {
 		return expansionGrid;
-	}
-
-	public FormOnlyDisplay getFormOnlyDisplay() {
-		return orderItemFormDisplay;
 	}
 
 }

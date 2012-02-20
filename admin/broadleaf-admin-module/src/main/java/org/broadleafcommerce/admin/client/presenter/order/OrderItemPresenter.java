@@ -16,6 +16,8 @@
 
 package org.broadleafcommerce.admin.client.presenter.order;
 
+import java.util.Arrays;
+
 import com.smartgwt.client.data.DSCallback;
 import com.smartgwt.client.data.DSRequest;
 import com.smartgwt.client.data.DSResponse;
@@ -32,8 +34,6 @@ import org.broadleafcommerce.openadmin.client.datasource.dynamic.PresentationLay
 import org.broadleafcommerce.openadmin.client.dto.ClassTree;
 import org.broadleafcommerce.openadmin.client.presenter.entity.DynamicFormPresenter;
 import org.broadleafcommerce.openadmin.client.presenter.entity.SubPresentable;
-
-import java.util.Arrays;
 
 /**
  * 
@@ -59,7 +59,7 @@ public class OrderItemPresenter extends DynamicFormPresenter implements SubPrese
 		display.getGrid().setDataSource(dataSource);
 		dataSource.setAssociatedGrid(display.getGrid());
 		dataSource.setupGridFields(gridFields, editable);
-		display.getFormOnlyDisplay().buildFields(dataSource, true, false, false);
+		display.getFormOnlyDisplay().buildFields(dataSource, true, false, false, null);
 	}
 	
 	public void setExpansionDataSource(ListGridDataSource dataSource, String[] gridFields, Boolean[] editable) {
@@ -104,6 +104,12 @@ public class OrderItemPresenter extends DynamicFormPresenter implements SubPrese
 		}
 	}
 
+    @Override
+    public boolean load(Record associatedRecord, AbstractDynamicDataSource associatedDataSource) {
+        return load(associatedRecord, associatedDataSource, null);
+    }
+
+    @Override
     public boolean load(Record associatedRecord, AbstractDynamicDataSource abstractDynamicDataSource, final DSCallback cb) {
 		this.associatedRecord = associatedRecord;
 		this.abstractDynamicDataSource = abstractDynamicDataSource;
@@ -152,7 +158,7 @@ public class OrderItemPresenter extends DynamicFormPresenter implements SubPrese
 				if (event.getState()) {
 					display.getRemoveButton().enable();
 					((DynamicEntityDataSource) display.getGrid().getDataSource()).resetPermanentFieldVisibilityBasedOnType(event.getSelectedRecord().getAttributeAsStringArray("_type"));
-					display.getFormOnlyDisplay().buildFields(display.getGrid().getDataSource(),false, false, false);
+					display.getFormOnlyDisplay().buildFields(display.getGrid().getDataSource(),false, false, false, event.getRecord());
 					display.getFormOnlyDisplay().getForm().editRecord(event.getRecord());
 					display.getFormOnlyDisplay().getForm().enable();
 				} else {
@@ -165,7 +171,7 @@ public class OrderItemPresenter extends DynamicFormPresenter implements SubPrese
 				if (event.getState()) {
 					//display.getRemoveButton().enable();
 					((DynamicEntityDataSource) display.getExpansionGrid().getDataSource()).resetPermanentFieldVisibilityBasedOnType(event.getSelectedRecord().getAttributeAsStringArray("_type"));
-					display.getFormOnlyDisplay().buildFields(display.getExpansionGrid().getDataSource(),false, false, false);
+					display.getFormOnlyDisplay().buildFields(display.getExpansionGrid().getDataSource(),false, false, false, event.getRecord());
 					display.getFormOnlyDisplay().getForm().editRecord(event.getRecord());
 					display.getFormOnlyDisplay().getForm().enable();
 				} else {

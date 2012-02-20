@@ -16,14 +16,14 @@
 
 package org.broadleafcommerce.openadmin.server.security.domain;
 
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.broadleafcommerce.openadmin.server.domain.SandBox;
 import org.broadleafcommerce.openadmin.server.domain.SandBoxImpl;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.ConfigurationItem;
-import org.broadleafcommerce.presentation.ValidationConfiguration;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.ConfigurationItem;
+import org.broadleafcommerce.common.presentation.ValidationConfiguration;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -68,7 +68,7 @@ public class AdminUserImpl implements AdminUser {
 		friendlyName="Admin Password",
 		order=3, 
 		group="User", 
-		fieldType=SupportedFieldType.PASSWORD, 
+		fieldType= SupportedFieldType.PASSWORD,
 		validationConfigurations={
 			@ValidationConfiguration(
 				validationImplementation="com.smartgwt.client.widgets.form.validator.MatchesFieldValidator",
@@ -81,7 +81,15 @@ public class AdminUserImpl implements AdminUser {
     @Column(name = "EMAIL", nullable=false)
     @Index(name="ADMINPERM_EMAIL_INDEX", columnNames={"EMAIL"})
     @AdminPresentation(friendlyName="Admin Email Address", order=4, group="User")
-    protected String email; 
+    protected String email;
+
+    @Column(name = "PHONE_NUMBER")
+    @AdminPresentation(friendlyName="Phone Number", order=5, group="User")
+    protected String phoneNumber;
+
+    @Column(name = "ACTIVE_STATUS_FLAG")
+    @AdminPresentation(friendlyName="Active Status", order=6, group="User")
+    protected Boolean activeStatusFlag = Boolean.TRUE;
 
     /** All roles that this user has */
     @ManyToMany(fetch = FetchType.LAZY, targetEntity = AdminRoleImpl.class)
@@ -89,6 +97,12 @@ public class AdminUserImpl implements AdminUser {
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region="blStandardElements")
     @BatchSize(size = 50)
     protected Set<AdminRole> allRoles = new HashSet<AdminRole>();
+
+    @ManyToMany(fetch = FetchType.LAZY, targetEntity = AdminPermissionImpl.class)
+    @JoinTable(name = "BLC_ADMIN_USER_PERMISSION_XREF", joinColumns = @JoinColumn(name = "ADMIN_USER_ID", referencedColumnName = "ADMIN_USER_ID"), inverseJoinColumns = @JoinColumn(name = "ADMIN_PERMISSION_ID", referencedColumnName = "ADMIN_PERMISSION_ID"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region="blStandardElements")
+    @BatchSize(size = 50)
+    protected Set<AdminPermission> allPermissions = new HashSet<AdminPermission>();
 
     @Transient
     protected String unencodedPassword;
@@ -146,6 +160,22 @@ public class AdminUserImpl implements AdminUser {
         this.email = email;
     }
 
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public Boolean getActiveStatusFlag() {
+        return activeStatusFlag;
+    }
+
+    public void setActiveStatusFlag(Boolean activeStatusFlag) {
+        this.activeStatusFlag = activeStatusFlag;
+    }
+
     public Set<AdminRole> getAllRoles() {
         return allRoles;
     }
@@ -160,5 +190,13 @@ public class AdminUserImpl implements AdminUser {
 
     public void setOverrideSandBox(SandBox overrideSandBox) {
         this.overrideSandBox = overrideSandBox;
+    }
+
+    public Set<AdminPermission> getAllPermissions() {
+        return allPermissions;
+    }
+
+    public void setAllPermissions(Set<AdminPermission> allPermissions) {
+        this.allPermissions = allPermissions;
     }
 }

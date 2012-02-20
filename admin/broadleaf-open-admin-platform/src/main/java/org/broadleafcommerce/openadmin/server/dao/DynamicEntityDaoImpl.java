@@ -43,7 +43,9 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.broadleafcommerce.money.Money;
+import org.broadleafcommerce.common.money.Money;
+import org.broadleafcommerce.common.presentation.client.SupportedFieldType;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
 import org.broadleafcommerce.openadmin.client.dto.ClassTree;
 import org.broadleafcommerce.openadmin.client.dto.FieldMetadata;
 import org.broadleafcommerce.openadmin.client.dto.FieldPresentationAttributes;
@@ -51,18 +53,16 @@ import org.broadleafcommerce.openadmin.client.dto.ForeignKey;
 import org.broadleafcommerce.openadmin.client.dto.MergedPropertyType;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePerspective;
 import org.broadleafcommerce.openadmin.client.dto.PersistencePerspectiveItemType;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.client.presentation.SupportedFieldType;
 import org.broadleafcommerce.openadmin.server.service.persistence.module.FieldManager;
-import org.broadleafcommerce.persistence.EntityConfiguration;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.AdminPresentationOverride;
-import org.broadleafcommerce.presentation.AdminPresentationOverrides;
-import org.broadleafcommerce.presentation.ConfigurationItem;
-import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
-import org.broadleafcommerce.presentation.RequiredOverride;
-import org.broadleafcommerce.presentation.ValidationConfiguration;
+import org.broadleafcommerce.common.persistence.EntityConfiguration;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverride;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverrides;
+import org.broadleafcommerce.common.presentation.ConfigurationItem;
+import org.broadleafcommerce.common.presentation.PopulateToOneFieldsEnum;
+import org.broadleafcommerce.common.presentation.RequiredOverride;
+import org.broadleafcommerce.common.presentation.ValidationConfiguration;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -159,19 +159,44 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
                  * Sort entities with the most derived appearing first
                  */
                 Class<?>[] sortedEntities = new Class<?>[entities.size()];
-                sortedEntities = entities.toArray(sortedEntities);
-                Arrays.sort(sortedEntities, new Comparator<Class<?>>() {
-
-                    public int compare(Class<?> o1, Class<?> o2) {
-                        if (o1.equals(o2)) {
-                            return 0;
-                        } else if (o1.isAssignableFrom(o2)) {
-                            return 1;
+                List<Class<?>> stageItems = new ArrayList<Class<?>>();
+                stageItems.add(ceilingClass);
+                int j = 0;
+                while (j < sortedEntities.length) {
+                    List<Class<?>> newStageItems = new ArrayList<Class<?>>();
+                    boolean topLevelClassFound = false;
+                    for (Class<?> stageItem : stageItems) {
+                        Iterator<Class<?>> itr = entities.iterator();
+                        while(itr.hasNext()) {
+                            Class<?> entity = itr.next();
+                            checkitem: {
+                                if (ArrayUtils.contains(entity.getInterfaces(), stageItem) || entity.equals(stageItem)) {
+                                    topLevelClassFound = true;
+                                    break checkitem;
+                                }
+                                
+                                if (topLevelClassFound) {
+                                    continue;
+                                }
+                                
+                                if (entity.getSuperclass().equals(stageItem)) {
+                                    break checkitem;
+                                }
+                                
+                                continue;
+                            }
+                            sortedEntities[j] = entity;
+                            itr.remove();
+                            j++;
+                            newStageItems.add(entity);
                         }
-                        return -1;
                     }
-
-                });
+                    if (newStageItems.isEmpty()) {
+                        throw new RuntimeException("There was a gap in the inheritance hierarchy for (" + ceilingClass.getName() + ")");
+                    }
+                    stageItems = newStageItems;
+                }
+                ArrayUtils.reverse(sortedEntities);
                 cache = sortedEntities;
                 POLYMORPHIC_ENTITY_CACHE.put(ceilingClass, sortedEntities);
             }
@@ -531,6 +556,7 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
                                 }
                                 if (localMetadata.getPresentationAttributes().getExplicitFieldType() != null) {
                                     serverMetadata.getPresentationAttributes().setExplicitFieldType(localMetadata.getPresentationAttributes().getExplicitFieldType());
+                                    serverMetadata.setFieldType(localMetadata.getPresentationAttributes().getExplicitFieldType());
                                 }
                                 if (localMetadata.getPresentationAttributes().getGroup() != null) {
                                     serverMetadata.getPresentationAttributes().setGroup(localMetadata.getPresentationAttributes().getGroup());
@@ -611,6 +637,9 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
                     attr.setVisibility(annot.visibility());
                     attr.setOrder(annot.order());
                     attr.setExplicitFieldType(annot.fieldType());
+                    if (annot.fieldType() != SupportedFieldType.UNKNOWN) {
+                        metadata.setFieldType(annot.fieldType());
+                    }
                     attr.setGroup(annot.group());
                     attr.setGroupCollapsed(annot.groupCollapsed());
                     attr.setGroupOrder(annot.groupOrder());
@@ -1142,7 +1171,8 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
                             type,
                             returnedClass,
                             parentClasses,
-                            amIExcluded
+                            amIExcluded,
+                            prefix
                         );
                         break checkProp;
                     }
@@ -1461,7 +1491,8 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
 		Type type, 
 		Class<?> returnedClass,
         List<Class<?>> parentClasses,
-        Boolean isParentExcluded
+        Boolean isParentExcluded,
+        String prefix
 	) throws MappingException, HibernateException, ClassNotFoundException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		String[] componentProperties = ((ComponentType) type).getPropertyNames();
 		List<String> componentPropertyNames = Arrays.asList(componentProperties);
@@ -1474,15 +1505,21 @@ public class DynamicEntityDaoImpl extends BaseHibernateCriteriaDao<Serializable>
             }
         }
 		PersistentClass persistentClass = getPersistentClass(targetClass.getName());
-		@SuppressWarnings("unchecked")
-		Iterator<Property> componentPropertyIterator = ((Component) persistentClass.getProperty(propertyName).getValue()).getPropertyIterator();
+        Property property;
+        try {
+            property = persistentClass.getProperty(propertyName);
+        } catch (MappingException e) {
+            property = persistentClass.getProperty(prefix + propertyName);
+        }
+        @SuppressWarnings("unchecked")
+		Iterator<Property> componentPropertyIterator = ((Component) property.getValue()).getPropertyIterator();
         List<Property> componentPropertyList = new ArrayList<Property>();
         while(componentPropertyIterator.hasNext()) {
             componentPropertyList.add(componentPropertyIterator.next());
         }
 		Map<String, FieldMetadata> newFields = new HashMap<String, FieldMetadata>();
 		buildProperties(
-			targetClass, 
+            targetClass,
 			foreignField, 
 			additionalForeignFields, 
 			additionalNonPersistentProperties,

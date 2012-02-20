@@ -83,5 +83,9 @@ public interface CustomerCareMessages extends ConstantsWithLookup {
     public String baseCountry();
     public String baseState();
     public String baseChallengeQuestion();
+    public String newCustomerAddressTitle();
+    public String customerAddressListTitle();
+    public String paymentResponseListTitle();
+    public String paymentLogListTitle();
 
 }

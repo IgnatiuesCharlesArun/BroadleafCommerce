@@ -16,7 +16,7 @@
 
 package org.broadleafcommerce.core.catalog.domain;
 
-import org.broadleafcommerce.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentation;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
@@ -45,7 +45,7 @@ public class CrossSaleProductImpl implements RelatedProduct {
     @GeneratedValue(generator= "CrossSaleProductId")
     @GenericGenerator(
         name="CrossSaleProductId",
-        strategy="org.broadleafcommerce.persistence.IdOverrideTableGenerator",
+        strategy="org.broadleafcommerce.common.persistence.IdOverrideTableGenerator",
         parameters = {
             @Parameter(name="table_name", value="SEQUENCE_GENERATOR"),
             @Parameter(name="segment_column_name", value="ID_NAME"),

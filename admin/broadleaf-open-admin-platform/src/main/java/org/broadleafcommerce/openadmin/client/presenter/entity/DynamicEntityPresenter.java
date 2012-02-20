@@ -16,6 +16,10 @@
 
 package org.broadleafcommerce.openadmin.client.presenter.entity;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.smartgwt.client.data.Criteria;
 import com.smartgwt.client.data.DSCallback;
@@ -25,6 +29,7 @@ import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.data.DataSourceField;
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.data.ResultSet;
+import com.smartgwt.client.types.DSOperationType;
 import com.smartgwt.client.util.BooleanCallback;
 import com.smartgwt.client.util.SC;
 import com.smartgwt.client.widgets.Canvas;
@@ -40,6 +45,7 @@ import com.smartgwt.client.widgets.grid.events.CellSavedEvent;
 import com.smartgwt.client.widgets.grid.events.CellSavedHandler;
 import com.smartgwt.client.widgets.grid.events.SelectionChangedHandler;
 import com.smartgwt.client.widgets.grid.events.SelectionEvent;
+import com.smartgwt.client.widgets.tree.TreeGrid;
 import org.broadleafcommerce.openadmin.client.BLCMain;
 import org.broadleafcommerce.openadmin.client.callback.ItemEdited;
 import org.broadleafcommerce.openadmin.client.callback.ItemEditedHandler;
@@ -51,10 +57,6 @@ import org.broadleafcommerce.openadmin.client.datasource.dynamic.PresentationLay
 import org.broadleafcommerce.openadmin.client.setup.PresenterSequenceSetupManager;
 import org.broadleafcommerce.openadmin.client.view.Display;
 import org.broadleafcommerce.openadmin.client.view.dynamic.DynamicEditDisplay;
-
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * @author jfischer
@@ -158,7 +160,13 @@ public abstract class DynamicEntityPresenter extends AbstractEntityPresenter {
         removeClickHandlerRegistration = display.getListDisplay().getRemoveButton().addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
                 if (event.isLeftButtonDown()) {
-                    removeClicked();
+                    SC.confirm("Are your sure you want to delete this entity?", new BooleanCallback() {
+                        public void execute(Boolean value) {
+                            if (value) {
+                                removeClicked();
+                            }
+                        }
+                    });
                 }
             }
         });
@@ -167,6 +175,8 @@ public abstract class DynamicEntityPresenter extends AbstractEntityPresenter {
             public void onFilterData(FetchDataEvent event) {
                 setStartState();
                 formPresenter.disable();
+                display.getListDisplay().getGrid().deselectAllRecords();
+                lastSelectedRecord = null;
             }
         });
         selectionChangedHandlerRegistration = display.getListDisplay().getGrid().addSelectionChangedHandler(new SelectionChangedHandler() {
@@ -181,7 +191,7 @@ public abstract class DynamicEntityPresenter extends AbstractEntityPresenter {
                         } else {
                             formPresenter.setStartState();
                             ((DynamicEntityDataSource) display.getListDisplay().getGrid().getDataSource()).resetPermanentFieldVisibilityBasedOnType(selectedRecord.getAttributeAsStringArray("_type"));
-                            display.getDynamicFormDisplay().getFormOnlyDisplay().buildFields(display.getListDisplay().getGrid().getDataSource(), true, true, false);
+                            display.getDynamicFormDisplay().getFormOnlyDisplay().buildFields(display.getListDisplay().getGrid().getDataSource(), true, true, false, selectedRecord);
                             display.getDynamicFormDisplay().getFormOnlyDisplay().getForm().editRecord(selectedRecord);
                             display.getListDisplay().getRemoveButton().enable();
                         }
@@ -229,12 +239,36 @@ public abstract class DynamicEntityPresenter extends AbstractEntityPresenter {
             container.addChild(display.asCanvas());
             loaded = true;
         }
+
+        if (getDefaultItemId() != null) {
+            loadInitialItem();
+        }
+
         if (BLCMain.MODAL_PROGRESS.isActive()) {
             BLCMain.MODAL_PROGRESS.stopProgress();
         }
         if (BLCMain.SPLASH_PROGRESS.isActive()) {
             BLCMain.SPLASH_PROGRESS.stopProgress();
         }
+    }
+    
+    protected void loadInitialItem() {
+        DataSource ds = getDisplay().getListDisplay().getGrid().getDataSource();
+        if (ds instanceof DynamicEntityDataSource) {
+            Criteria criteria = new Criteria();
+            criteria.addCriteria(ds.getPrimaryKeyFieldName(), getDefaultItemId());
+            ds.fetchData(criteria, new DSCallback() {
+                  @Override
+                  public void execute(DSResponse response, Object rawData, DSRequest request) {
+                      if (response != null && response.getData() != null && response.getData().length > 0) {
+                        getDisplay().getListDisplay().getGrid().setData(response.getData());
+                        getDisplay().getListDisplay().getGrid().selectRecord(0);
+                      }
+                  }
+              });                    
+        }
+                
+
     }
 
     protected Boolean containsDisplay(Canvas container) {
@@ -284,10 +318,12 @@ public abstract class DynamicEntityPresenter extends AbstractEntityPresenter {
         compileDefaultValuesFromCurrentFilter(initialValues);
         BLCMain.ENTITY_ADD.editNewRecord(newItemTitle, (DynamicEntityDataSource) display.getListDisplay().getGrid().getDataSource(), initialValues, new ItemEditedHandler() {
             public void onItemEdited(ItemEdited event) {
-                ListGridRecord[] recordList = new ListGridRecord[]{event.getRecord()};
+                ListGridRecord[] recordList = new ListGridRecord[]{(ListGridRecord) event.getRecord()};
                 DSResponse updateResponse = new DSResponse();
                 updateResponse.setData(recordList);
-                getDisplay().getListDisplay().getGrid().getDataSource().updateCaches(updateResponse);
+                DSRequest updateRequest = new DSRequest();
+                updateRequest.setOperationType(DSOperationType.UPDATE);
+                getDisplay().getListDisplay().getGrid().getDataSource().updateCaches(updateResponse, updateRequest);
                 getDisplay().getListDisplay().getGrid().deselectAllRecords();
                 getDisplay().getListDisplay().getGrid().selectRecord(getDisplay().getListDisplay().getGrid().getRecordIndex(event.getRecord()));
                 String primaryKey = display.getListDisplay().getGrid().getDataSource().getPrimaryKeyFieldName();
@@ -298,28 +334,33 @@ public abstract class DynamicEntityPresenter extends AbstractEntityPresenter {
                 }
                 if (!foundRecord) {
                     ((AbstractDynamicDataSource) getDisplay().getListDisplay().getGrid().getDataSource()).setAddedRecord(event.getRecord());
-                    getDisplay().getListDisplay().getGrid().getDataSource().fetchData(new Criteria("blc.fetch.from.cache", event.getRecord().getAttribute(primaryKey)), new DSCallback() {
-                        @Override
-                        public void execute(DSResponse response, Object rawData, DSRequest request) {
-                            getDisplay().getListDisplay().getGrid().setData(response.getData());
-                            getDisplay().getListDisplay().getGrid().selectRecord(0);
-                        }
-                    });
+                    getDisplay().getListDisplay().getGrid().getDataSource().
+                            fetchData(new Criteria("blc.fetch.from.cache", event.getRecord().getAttribute(primaryKey)), new DSCallback() {
+                                @Override
+                                public void execute(DSResponse response, Object rawData, DSRequest request) {
+                                    getDisplay().getListDisplay().getGrid().setData(response.getData());
+                                    getDisplay().getListDisplay().getGrid().selectRecord(0);
+                                }
+                            });
                 }
             }
         }, null, null);
     }
 
     protected void removeClicked() {
-        SC.confirm("Are your sure you want to delete this entity?", new BooleanCallback() {
-            public void execute(Boolean value) {
-                if (value) {
-                    display.getListDisplay().getGrid().removeSelectedData();
-                    formPresenter.disable();
-                    display.getListDisplay().getRemoveButton().disable();
+        Record selectedRecord = display.getListDisplay().getGrid().getSelectedRecord();
+        final String primaryKey = display.getListDisplay().getGrid().getDataSource().getPrimaryKeyFieldName();
+        final String id = selectedRecord.getAttribute(primaryKey);
+        display.getListDisplay().getGrid().removeSelectedData(new DSCallback() {
+            @Override
+            public void execute(DSResponse response, Object rawData, DSRequest request) {
+                if (!(getDisplay().getListDisplay().getGrid() instanceof TreeGrid) && getDisplay().getListDisplay().getGrid().getResultSet() == null) {
+                    getDisplay().getListDisplay().getGrid().setData(new Record[]{});
                 }
             }
-        });
+        }, null);
+        formPresenter.disable();
+        display.getListDisplay().getRemoveButton().disable();
     }
 
     public HandlerRegistration getSelectionChangedHandlerRegistration() {

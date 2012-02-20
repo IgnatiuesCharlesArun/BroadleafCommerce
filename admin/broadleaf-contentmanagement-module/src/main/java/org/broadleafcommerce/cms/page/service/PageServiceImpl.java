@@ -16,12 +16,20 @@
 
 package org.broadleafcommerce.cms.page.service;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.broadleafcommerce.cms.common.AbstractContentService;
+import org.broadleafcommerce.cms.file.service.StaticAssetService;
 import org.broadleafcommerce.cms.page.dao.PageDao;
 import org.broadleafcommerce.cms.page.domain.Page;
 import org.broadleafcommerce.cms.page.domain.PageField;
+import org.broadleafcommerce.cms.page.domain.PageImpl;
 import org.broadleafcommerce.cms.page.domain.PageTemplate;
+import org.broadleafcommerce.cms.page.dto.PageDTO;
+import org.broadleafcommerce.cms.page.message.ArchivedPagePublisher;
 import org.broadleafcommerce.common.locale.domain.Locale;
 import org.broadleafcommerce.common.locale.service.LocaleService;
 import org.broadleafcommerce.openadmin.server.dao.SandBoxDao;
@@ -33,14 +41,9 @@ import org.broadleafcommerce.openadmin.server.domain.SandBoxItemType;
 import org.broadleafcommerce.openadmin.server.domain.SandBoxOperationType;
 import org.broadleafcommerce.openadmin.server.domain.SandBoxType;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +51,7 @@ import java.util.Map;
  * Created by bpolster.
  */
 @Service("blPageService")
-public class PageServiceImpl implements PageService, SandBoxItemListener {
+public class PageServiceImpl extends AbstractContentService implements PageService, SandBoxItemListener {
     private static final Log LOG = LogFactory.getLog(PageServiceImpl.class);
 
     @Resource(name="blPageDao")
@@ -62,6 +65,13 @@ public class PageServiceImpl implements PageService, SandBoxItemListener {
 
     @Resource(name="blLocaleService")
     protected LocaleService localeService;
+    
+    @Resource(name="blStaticAssetService")
+    protected StaticAssetService staticAssetService;
+    
+    protected Cache pageCache;
+
+    protected List<ArchivedPagePublisher> archivedPageListeners;
 
     /**
      * Returns the page with the passed in id.
@@ -235,123 +245,131 @@ public class PageServiceImpl implements PageService, SandBoxItemListener {
         updatePage(page, destinationSandbox);
     }
 
+    private PageDTO buildPageDTO(Page page, boolean secure) {
+        PageDTO pageDTO = new PageDTO();
+        pageDTO.setId(page.getId());
+        pageDTO.setDescription(page.getDescription());
+        pageDTO.setUrl(page.getFullUrl());
+
+        if (page.getSandbox() != null) {
+            pageDTO.setSandboxId(page.getSandbox().getId());
+        }
+
+        if (page.getPageTemplate() != null) {
+            pageDTO.setTemplatePath(page.getPageTemplate().getTemplatePath());
+            if (page.getPageTemplate().getLocale() != null) {
+                pageDTO.setLocaleCode(page.getPageTemplate().getLocale().getLocaleCode());
+            }
+        }
+
+        String envPrefix = staticAssetService.getStaticAssetEnvironmentUrlPrefix();
+        if (envPrefix != null && secure) {
+            envPrefix = staticAssetService.getStaticAssetEnvironmentSecureUrlPrefix();
+        }
+
+        String cmsPrefix = staticAssetService.getStaticAssetUrlPrefix();
+
+        for (String fieldKey : page.getPageFields().keySet()) {
+            PageField pf = page.getPageFields().get(fieldKey);
+            String originalValue = pf.getValue();
+            if (envPrefix != null && originalValue != null && originalValue.contains(cmsPrefix)) {
+                String fldValue = originalValue.replaceAll(cmsPrefix, envPrefix+cmsPrefix);
+                pageDTO.getPageFields().put(fieldKey, fldValue);
+            } else {
+                pageDTO.getPageFields().put(fieldKey, originalValue);
+            }
+        }
+        return pageDTO;
+    }
+
 
     /**
      * Retrieve the page if one is available for the passed in uri.
      */
     @Override
-    public Page findPageByURI(SandBox currentSandbox, Locale locale, String uri) {
-        if (uri != null) {
-            // TODO: Optimize production page lookup
+    public PageDTO findPageByURI(SandBox currentSandbox, Locale locale, String uri, boolean secure) {
+        PageDTO productionPageDTO = null;
+        if (uri != null) {        
             SandBox productionSandbox = null;
             if (currentSandbox != null && currentSandbox.getSite() != null) {
                 productionSandbox = currentSandbox.getSite().getProductionSandbox();
             }
-            Page productionPage = pageDao.findPageByURI(productionSandbox, locale, uri);
+    
+            String key = buildKey(productionSandbox, locale, uri);
+            key = key + "-" + secure;
+            productionPageDTO = getPageFromCache(key);
+            if (productionPageDTO == null) {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Page not found in cache, searching DB for key: " + key);
+                }
+                Page productionPage = pageDao.findPageByURI(productionSandbox, locale, uri);
+                
+                if (productionPage != null) {
+                    productionPageDTO = buildPageDTO(productionPage, secure); 
 
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Page found, adding page to cache with key: " + key);
+                    }
+                    productionPageDTO = buildPageDTO(productionPage, secure);
+                    addPageToCache(productionPageDTO, key);
+                } else {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("No match found for passed in URI, locale, and sandbox.  Key = " + key);
+                    }
+                    productionPageDTO = null;
+                }
+            } else {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Production page found in cache.  Key = " + key);
+                }                
+            }
+            
+            // If the request is from a non-production SandBox, we need to check to see if the SandBox has an override 
+            // for this page before returning.  No caching is used for Sandbox pages.
             if (currentSandbox != null && ! currentSandbox.getSandBoxType().equals(SandBoxType.PRODUCTION)) {
                 Page sandboxPage = pageDao.findPageByURI(currentSandbox, locale, uri);
                 if (sandboxPage != null) {
                     if (sandboxPage.getDeletedFlag()) {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Returning null because user has requested to delete the page in the current SandBox.  Key = " + key);
+                        }
                         return null;
                     } else {
-                        return sandboxPage;
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Found page in SandBox for key = " + key);
+                        }
+                        PageDTO sandboxDTO = buildPageDTO(sandboxPage, secure);
+                        return sandboxDTO;
                     }
                 }
-
+            } else {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Production page found in cache for key = " + key);
+                }
             }
-            return productionPage;
-        } else {
-            return null;
         }
+
+        return productionPageDTO;
     }
 
     @Override
-    public Long countPages(SandBox sandbox, Criteria criteria) {
-        criteria.add(Restrictions.eq("archivedFlag", false));
-        criteria.setProjection(Projections.rowCount());
-
-        if (sandbox == null) {
-            // Query is hitting the production sandbox.
-            criteria.add(Restrictions.isNull("sandbox"));
-            return (Long) criteria.uniqueResult();
-        } else {
-            Criterion originalSandboxExpression = Restrictions.eq("originalSandBox", sandbox);
-            Criterion currentSandboxExpression = Restrictions.eq("sandbox", sandbox);
-            Criterion productionSandboxExpression;
-            if (sandbox.getSite() == null || sandbox.getSite().getProductionSandbox() == null) {
-                productionSandboxExpression = Restrictions.isNull("sandbox");
-            } else {
-                // Query is hitting the production sandbox.
-                if (sandbox.getId().equals(sandbox.getSite().getProductionSandbox().getId())) {
-                    return (Long) criteria.uniqueResult();
-                }
-                productionSandboxExpression = Restrictions.eq("sandbox", sandbox.getSite().getProductionSandbox());
-            }
-
-            criteria.add(Restrictions.or(Restrictions.or(currentSandboxExpression, productionSandboxExpression), originalSandboxExpression));
-
-            Long resultCount = (Long) criteria.list().get(0);
-            Long updatedCount = 0L;
-            Long deletedCount = 0L;
-
-            // count updated items
-            criteria.add(Restrictions.and(Restrictions.isNotNull("originalPageId"),Restrictions.or(currentSandboxExpression, originalSandboxExpression)));
-            updatedCount = (Long) criteria.list().get(0);
-
-            // count deleted items
-            criteria.add(Restrictions.and(Restrictions.eq("deletedFlag", true),Restrictions.or(currentSandboxExpression, originalSandboxExpression)));
-            deletedCount = (Long) criteria.list().get(0);
-
-            return resultCount - updatedCount - deletedCount;
-        }
+    public List<Page> findPages(SandBox sandbox, Criteria c) {
+        return (List<Page>) findItems(sandbox, c, Page.class, PageImpl.class, "originalPageId");
     }
 
     @Override
-    public List<Page> findPages(SandBox sandbox, Criteria criteria) {
-        criteria.add(Restrictions.eq("archivedFlag", false));
+    public Long countPages(SandBox sandbox, Criteria c) {
+       return countItems(sandbox, c, PageImpl.class, "originalPageId");
+    }
+    
+    protected void productionItemArchived(Page page) {
+        // Immediately remove the page from this VM.
+        removePageFromCache(page);
 
-        if (sandbox == null) {
-            // Query is hitting the production sandbox.
-            criteria.add(Restrictions.isNull("sandbox"));
-            return (List<Page>) criteria.list();
-        } else {
-            Criterion originalSandboxExpression = Restrictions.eq("originalSandBox", sandbox);
-            Criterion currentSandboxExpression = Restrictions.eq("sandbox", sandbox);
-            Criterion productionSandboxExpression = null;
-            if (sandbox.getSite() == null || sandbox.getSite().getProductionSandbox() == null) {
-                productionSandboxExpression = Restrictions.isNull("sandbox");
-            } else {
-                if (!SandBoxType.PRODUCTION.equals(sandbox.getSandBoxType())) {
-                    productionSandboxExpression = Restrictions.eq("sandbox", sandbox.getSite().getProductionSandbox());
-                }
+        if (archivedPageListeners != null) {
+            for (ArchivedPagePublisher listener : archivedPageListeners) {
+                listener.processPageArchive(page, buildKey(page));
             }
-
-            if (productionSandboxExpression != null) {
-                criteria.add(Restrictions.or(Restrictions.or(currentSandboxExpression, productionSandboxExpression), originalSandboxExpression));
-            } else {
-                criteria.add(Restrictions.or(currentSandboxExpression, originalSandboxExpression));
-            }
-
-            List<Page> resultList = (List<Page>) criteria.list();
-
-            // Iterate once to build the map
-            LinkedHashMap returnItems = new LinkedHashMap<Long,Page>();
-            for (Page page : resultList) {
-                returnItems.put(page.getId(), page);
-            }
-
-            // Iterate to remove items from the final list
-            for (Page page : resultList) {
-                if (page.getOriginalPageId() != null) {
-                    returnItems.remove(page.getOriginalPageId());
-                }
-
-                if (page.getDeletedFlag()) {
-                    returnItems.remove(page.getId());
-                }
-            }
-            return new ArrayList<Page>(returnItems.values());
         }
     }
 
@@ -380,6 +398,7 @@ public class PageServiceImpl implements PageService, SandBoxItemListener {
                 Page originalPage = pageDao.readPageById(page.getOriginalPageId());
                 originalPage.setArchivedFlag(Boolean.TRUE);
                 pageDao.updatePage(originalPage);
+                productionItemArchived(originalPage);
 
                // We are archiving the old page and making this the new "production page", so
                // null out the original page id before saving.
@@ -432,6 +451,71 @@ public class PageServiceImpl implements PageService, SandBoxItemListener {
             }
         }
     }
+    
+    private Cache getPageCache() {
+        if (pageCache == null) {
+            pageCache = CacheManager.getInstance().getCache("cmsPageCache");
+        }
+        return pageCache;
+    }
 
+    private String buildKey(SandBox currentSandbox, Locale locale, String uri) {
+        StringBuffer key = new StringBuffer(uri);
+        if (locale != null) {
+            key.append("-").append(locale.getLocaleCode());
+        }
 
+        if (currentSandbox != null) {
+            key.append("-").append(currentSandbox.getId());
+        }
+
+        return key.toString();
+    }
+
+    private String buildKey(Page page) {
+        return buildKey(page.getSandbox(), page.getPageTemplate().getLocale(), page.getFullUrl());
+    }
+    
+    private void addPageToCache(PageDTO page, String key) {
+        getPageCache().put(new Element(key, page));
+    }
+    
+    private PageDTO getPageFromCache(String key) {
+        Element cacheElement = getPageCache().get(key);
+        if (cacheElement != null) {
+            return (PageDTO) getPageCache().get(key).getValue();
+        }
+        return null;
+    }
+
+    /**
+     * Call to evict an item from the cache.
+     * @param p
+     */
+    public void removePageFromCache(Page p) {
+        // Remove secure and non-secure instances of the page.
+        // Typically the page will be in one or the other if at all.
+        removePageFromCache(buildKey(p));
+    }
+
+    /**
+     * Call to evict both secure and non-secure pages matching
+     * the passed in key.
+     *
+     * @param baseKey
+     */
+    public void removePageFromCache(String baseKey) {
+        // Remove secure and non-secure instances of the page.
+        // Typically the page will be in one or the other if at all.
+        getPageCache().remove(baseKey+"-"+true);
+        getPageCache().remove(baseKey+"-"+false);
+    }
+
+    public List<ArchivedPagePublisher> getArchivedPageListeners() {
+        return archivedPageListeners;
+    }
+
+    public void setArchivedPageListeners(List<ArchivedPagePublisher> archivedPageListeners) {
+        this.archivedPageListeners = archivedPageListeners;
+    }
 }

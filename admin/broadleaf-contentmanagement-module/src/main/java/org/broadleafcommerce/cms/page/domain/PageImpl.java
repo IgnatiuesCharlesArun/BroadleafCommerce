@@ -16,23 +16,6 @@
 
 package org.broadleafcommerce.cms.page.domain;
 
-import org.broadleafcommerce.openadmin.audit.AdminAuditable;
-import org.broadleafcommerce.openadmin.audit.AdminAuditableListener;
-import org.broadleafcommerce.openadmin.client.dto.VisibilityEnum;
-import org.broadleafcommerce.openadmin.server.domain.SandBox;
-import org.broadleafcommerce.openadmin.server.domain.SandBoxImpl;
-import org.broadleafcommerce.openadmin.server.domain.Site;
-import org.broadleafcommerce.presentation.AdminPresentation;
-import org.broadleafcommerce.presentation.AdminPresentationClass;
-import org.broadleafcommerce.presentation.AdminPresentationOverride;
-import org.broadleafcommerce.presentation.AdminPresentationOverrides;
-import org.broadleafcommerce.presentation.PopulateToOneFieldsEnum;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Index;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -49,9 +32,22 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
-import javax.persistence.Transient;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.broadleafcommerce.common.presentation.AdminPresentation;
+import org.broadleafcommerce.common.presentation.AdminPresentationClass;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverride;
+import org.broadleafcommerce.common.presentation.AdminPresentationOverrides;
+import org.broadleafcommerce.common.presentation.PopulateToOneFieldsEnum;
+import org.broadleafcommerce.common.presentation.client.VisibilityEnum;
+import org.broadleafcommerce.openadmin.audit.AdminAuditable;
+import org.broadleafcommerce.openadmin.audit.AdminAuditableListener;
+import org.broadleafcommerce.openadmin.server.domain.SandBox;
+import org.broadleafcommerce.openadmin.server.domain.SandBoxImpl;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Index;
 
 /**
  * Created by bpolster.
@@ -59,22 +55,15 @@ import java.util.Map;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "BLC_PAGE")
-@Cache(usage= CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region="blCMSElements")
 @EntityListeners(value = { AdminAuditableListener.class })
 @AdminPresentationOverrides(
     {
-        @AdminPresentationOverride(name="auditable.createdBy.name", value=@AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)),
-        @AdminPresentationOverride(name="auditable.updatedBy.name", value=@AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)),
-        @AdminPresentationOverride(name="auditable.dateCreated", value=@AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)),
-        @AdminPresentationOverride(name="auditable.dateUpdated", value=@AdminPresentation(visibility = VisibilityEnum.HIDDEN_ALL)),
-        @AdminPresentationOverride(name="auditable.createdBy.login", value=@AdminPresentation(excluded = true)),
-        @AdminPresentationOverride(name="auditable.createdBy.password", value=@AdminPresentation(excluded = true)),
-        @AdminPresentationOverride(name="auditable.createdBy.email", value=@AdminPresentation(excluded = true)),
-        @AdminPresentationOverride(name="auditable.createdBy.currentSandBox", value=@AdminPresentation(excluded = true)),
-        @AdminPresentationOverride(name="auditable.updatedBy.login", value=@AdminPresentation(excluded = true)),
-        @AdminPresentationOverride(name="auditable.updatedBy.password", value=@AdminPresentation(excluded = true)),
-        @AdminPresentationOverride(name="auditable.updatedBy.email", value=@AdminPresentation(excluded = true)),
-        @AdminPresentationOverride(name="auditable.updatedBy.currentSandBox", value=@AdminPresentation(excluded = true)),
+        @AdminPresentationOverride(name="auditable.createdBy.id", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+        @AdminPresentationOverride(name="auditable.updatedBy.id", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+        @AdminPresentationOverride(name="auditable.createdBy.name", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+        @AdminPresentationOverride(name="auditable.updatedBy.name", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+        @AdminPresentationOverride(name="auditable.dateCreated", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
+        @AdminPresentationOverride(name="auditable.dateUpdated", value=@AdminPresentation(readOnly = true, visibility = VisibilityEnum.HIDDEN_ALL)),
         @AdminPresentationOverride(name="pageTemplate.templateDescription", value=@AdminPresentation(excluded = true)),
         @AdminPresentationOverride(name="pageTemplate.locale", value=@AdminPresentation(excluded = true))
     }
@@ -108,7 +97,6 @@ public class PageImpl implements Page {
     @JoinTable(name = "BLC_PAGE_FLD_MAP", joinColumns = @JoinColumn(name = "PAGE_ID", referencedColumnName = "PAGE_ID"), inverseJoinColumns = @JoinColumn(name = "PAGE_FLD_ID", referencedColumnName = "PAGE_FLD_ID"))
     @org.hibernate.annotations.MapKey(columns = {@Column(name = "MAP_KEY", nullable = false)})
     @Cascade(value={org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region="blCMSElements")
     @BatchSize(size = 20)
     protected Map<String,PageField> pageFields = new HashMap<String,PageField>();
 
@@ -142,13 +130,8 @@ public class PageImpl implements Page {
     @Index(name="ORIG_PAGE_ID_INDX", columnNames={"ORIG_PAGE_ID"})
     protected Long originalPageId;
 
-    /*@ManyToOne(targetEntity = SiteImpl.class)
-    @JoinColumn(name="SITE_ID")*/
-    @Transient
-    @AdminPresentation(excluded = true)
-    protected Site site;
-
     @Embedded
+    @AdminPresentation(excluded = true)
     protected AdminAuditable auditable = new AdminAuditable();
 
     @Override
@@ -219,15 +202,6 @@ public class PageImpl implements Page {
         this.sandbox = sandbox;
     }
 
-     @Override
-    public Site getSite() {
-        return site;
-    }
-
-    @Override
-    public void setSite(Site site) {
-        this.site = site;
-    }
 
     @Override
     public Long getOriginalPageId() {
@@ -288,7 +262,6 @@ public class PageImpl implements Page {
     @Override
     public Page cloneEntity() {
         PageImpl newPage = new PageImpl();
-        newPage.site=site;
 
         newPage.archivedFlag = archivedFlag;
         newPage.deletedFlag = deletedFlag;

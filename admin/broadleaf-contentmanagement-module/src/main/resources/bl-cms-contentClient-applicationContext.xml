@@ -19,7 +19,25 @@
 	<context:component-scan base-package="org.broadleafcommerce.cms"/>
     <context:component-scan base-package="org.broadleafcommerce.common.locale"/>
 
-    <bean id="blPersistenceUnitManager" class="org.broadleafcommerce.profile.extensibility.jpa.MergePersistenceUnitManager">
+    <bean id="blConfiguration" class="org.broadleafcommerce.common.config.RuntimeEnvironmentPropertiesConfigurer">
+    		<property name="propertyLocations">
+    			<set>
+    				<value>classpath:config/bc/</value>
+    			</set>
+    		</property>
+    		<property name="environments">
+    			<set>
+    				<value>production</value>
+    				<value>staging</value>
+    				<value>integration</value>
+    				<value>development</value>
+    			</set>
+    		</property>
+    		<property name="defaultEnvironment" value="development"/>
+    		<property name="ignoreUnresolvablePlaceholders" value="true"/>
+    	</bean>
+
+    <bean id="blPersistenceUnitManager" class="org.broadleafcommerce.common.extensibility.jpa.MergePersistenceUnitManager">
 		<property name="persistenceXmlLocations">
 			<list>
 				<value>classpath*:/META-INF/persistence-cms.xml</value>
@@ -50,7 +68,7 @@
 	    <aop:advisor advice-ref="blTxAdviceAssetStorageInfo" pointcut-ref="blAssetStorageServiceOperation"/>
 	</aop:config>
 
-	<bean id="blCacheManager" class="org.broadleafcommerce.profile.extensibility.cache.ehcache.MergeEhCacheManagerFactoryBean">
+	<bean id="blCacheManager" class="org.broadleafcommerce.common.extensibility.cache.ehcache.MergeEhCacheManagerFactoryBean">
 		<property name="shared" value="true"/>
 		<property name="configLocations">
 			<list>
@@ -59,7 +77,7 @@
 		</property>
 	</bean>
 
-    <bean id="blEntityConfiguration" class="org.broadleafcommerce.persistence.EntityConfiguration">
+    <bean id="blEntityConfiguration" class="org.broadleafcommerce.common.persistence.EntityConfiguration">
 		<property name="entityContexts">
 			<list>
 				<value>classpath:bl-cms-applicationContext-entity.xml</value>
@@ -98,6 +116,12 @@
 
     <bean id="blStructuredContentService" class="org.broadleafcommerce.cms.structure.service.StructuredContentServiceImpl">
         <property name="contentRuleProcessors" ref="blContentRuleProcessors"/>
+	</bean>
+
+    <bean id="blStaticAssetService" class="org.broadleafcommerce.cms.file.service.StaticAssetServiceImpl">
+        <property name="staticAssetUrlPrefix" value="${asset.server.url.prefix.internal}"/>
+        <property name="staticAssetEnvironmentUrlPrefix" value="${asset.server.url.prefix}"/>
+        <property name="staticAssetEnvironmentSecureUrlPrefix" value="${asset.server.url.prefix.secure}"/>
 	</bean>
 
     <bean id="blPageURLProcessor" class="org.broadleafcommerce.cms.web.PageURLProcessor"/>
