@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import javax.annotation.Resource;
 
+import org.broadleafcommerce.common.money.Money;
 import org.broadleafcommerce.core.catalog.domain.Sku;
 import org.broadleafcommerce.core.catalog.domain.SkuImpl;
 import org.broadleafcommerce.core.order.domain.DiscreteOrderItem;
@@ -33,7 +34,6 @@ import org.broadleafcommerce.core.order.domain.Order;
 import org.broadleafcommerce.core.order.domain.OrderImpl;
 import org.broadleafcommerce.core.payment.domain.PaymentInfo;
 import org.broadleafcommerce.core.payment.domain.PaymentInfoImpl;
-import org.broadleafcommerce.money.Money;
 import org.broadleafcommerce.pricing.service.module.CyberSourceTaxModule;
 import org.broadleafcommerce.profile.core.domain.Address;
 import org.broadleafcommerce.profile.core.domain.AddressImpl;
