@@ -90,6 +90,13 @@
             </build>
         </profile>
     </profiles>
+    <repositories>
+        <repository>
+            <id>braintree</id>
+            <name>Braintree</name>
+            <url>http://braintree.github.com/braintree_java/releases</url>
+        </repository>
+    </repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -130,6 +137,11 @@
         <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymockclassextension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.braintreegateway</groupId>
+            <artifactId>braintree-java</artifactId>
+            <version>2.14.0</version>
         </dependency>
 	</dependencies>
 </project>

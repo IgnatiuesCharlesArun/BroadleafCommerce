@@ -237,6 +237,13 @@
             </distributionManagement>
         </profile>
     </profiles>
+    <repositories>
+        <repository>
+            <id>braintree</id>
+            <name>Braintree</name>
+            <url>http://braintree.github.com/braintree_java/releases</url>
+        </repository>
+    </repositories>
     <dependencyManagement>
         <dependencies>
             <!--Broadleaf libraries -->
@@ -975,6 +982,11 @@
                 <artifactId>antisamy</artifactId>
                 <version>1.4.5</version>
                 <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.braintreegateway</groupId>
+                <artifactId>braintree-java</artifactId>
+                <version>2.14.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

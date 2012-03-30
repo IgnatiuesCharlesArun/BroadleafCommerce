@@ -36,6 +36,7 @@ public class OrderStatus implements Serializable, BroadleafEnumerationType {
     public static final OrderStatus NAMED = new OrderStatus("NAMED", "Named");
     public static final OrderStatus IN_PROCESS = new OrderStatus("IN_PROCESS", "In Process");
     public static final OrderStatus SUBMITTED = new OrderStatus("SUBMITTED", "Submitted");
+    public static final OrderStatus VOIDED = new OrderStatus("VOIDED", "Voided");
 
     public static OrderStatus getInstance(final String type) {
         return TYPES.get(type);

@@ -16,13 +16,6 @@
 
 package org.broadleafcommerce.core.payment.service.workflow;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
 import org.broadleafcommerce.core.order.service.CartService;
 import org.broadleafcommerce.core.payment.domain.PaymentInfo;
 import org.broadleafcommerce.core.payment.domain.Referenced;
@@ -30,6 +23,12 @@ import org.broadleafcommerce.core.payment.service.SecurePaymentInfoService;
 import org.broadleafcommerce.core.workflow.ProcessContext;
 import org.broadleafcommerce.core.workflow.ProcessContextFactory;
 import org.broadleafcommerce.core.workflow.WorkflowException;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class PaymentProcessContextFactory implements ProcessContextFactory {
 
@@ -56,7 +55,11 @@ public class PaymentProcessContextFactory implements ProcessContextFactory {
             Iterator<PaymentInfo> infos = paymentInfoList.iterator();
             while (infos.hasNext()) {
                 PaymentInfo info = infos.next();
-                secureMap.put(info, securePaymentInfoService.findSecurePaymentInfo(info.getReferenceNumber(), info.getType()));
+                Referenced referenced = securePaymentInfoService.findSecurePaymentInfo(info.getReferenceNumber(),info.getType());
+                if (referenced == null) {
+                    referenced = info.createEmptyReferenced();
+                }
+                secureMap.put(info, referenced);
             }
         }
         CombinedPaymentContextSeed combinedSeed = new CombinedPaymentContextSeed(secureMap, paymentActionType, paymentSeed.getOrder().getTotal(), paymentSeed.getPaymentResponse());

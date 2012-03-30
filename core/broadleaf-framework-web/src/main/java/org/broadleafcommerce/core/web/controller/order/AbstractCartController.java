@@ -294,6 +294,13 @@ public abstract class AbstractCartController {
         return "redirect:/checkout/checkout.htm";
     }
 
+    @RequestMapping(params="braintreeContactInfo", method = RequestMethod.POST)
+    public String braintreeForm(@ModelAttribute(value="cartSummary") CartSummary cartSummary, Errors errors, ModelMap model, HttpServletRequest request) throws PricingException {
+        Order currentCartOrder = retrieveCartOrder(request, model);
+        updateFulfillmentGroups(cartSummary, currentCartOrder);
+        return "redirect:/braintreeForm/braintreeContactInfo.htm";
+    }
+
     @RequestMapping(params="updateShipping=performUpdate", method = RequestMethod.POST)
     public String updateShipping (@ModelAttribute(value="cartSummary") CartSummary cartSummary, ModelMap model, HttpServletRequest request) throws PricingException {
         Order currentCartOrder = retrieveCartOrder(request, model);
